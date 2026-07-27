@@ -20,6 +20,18 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-sharing",
+      "expo-localization",
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "DeLAPLAK needs access to your photos so you can attach product images."
+        }
+      ]
+    ]
   }
 }
