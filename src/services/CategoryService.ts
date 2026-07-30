@@ -3,7 +3,8 @@ import { QueryBuilder } from './QueryBuilder';
 import { Category, CategoryTreeNode, FilterOption, I18nText, PaginationResponse } from '../models';
 
 export type CategoryPayload = {
-  name: I18nText;
+  name: Partial<I18nText>;
+  description?: Partial<I18nText>;
   slug: string;
   parent?: string | null;
 };

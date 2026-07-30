@@ -27,6 +27,9 @@ export default function AdminCategoryFormScreen({ route, navigation }: RootStack
   const [nameEn, setNameEn] = useState('');
   const [nameFr, setNameFr] = useState('');
   const [nameAr, setNameAr] = useState('');
+  const [descriptionEn, setDescriptionEn] = useState('');
+  const [descriptionFr, setDescriptionFr] = useState('');
+  const [descriptionAr, setDescriptionAr] = useState('');
   const [slug, setSlug] = useState('');
   const [parentId, setParentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +39,9 @@ export default function AdminCategoryFormScreen({ route, navigation }: RootStack
       setNameEn(categoryQuery.data.name.en);
       setNameFr(categoryQuery.data.name.fr);
       setNameAr(categoryQuery.data.name.ar);
+      setDescriptionEn(categoryQuery.data.description?.en ?? '');
+      setDescriptionFr(categoryQuery.data.description?.fr ?? '');
+      setDescriptionAr(categoryQuery.data.description?.ar ?? '');
       setSlug(categoryQuery.data.slug);
       setParentId(categoryQuery.data.parent);
     }
@@ -45,7 +51,22 @@ export default function AdminCategoryFormScreen({ route, navigation }: RootStack
 
   const saveMutation = useMutation(
     () => {
-      const payload = { name: { en: nameEn, fr: nameFr, ar: nameAr }, slug, parent: parentId };
+      // Empty/untouched language inputs are sent as undefined (not ""), so the backend's
+      // first-non-empty-wins auto-fill logic can pick the right value to copy to the others.
+      const payload = {
+        name: {
+          en: nameEn.trim() || undefined,
+          fr: nameFr.trim() || undefined,
+          ar: nameAr.trim() || undefined,
+        },
+        description: {
+          en: descriptionEn.trim() || undefined,
+          fr: descriptionFr.trim() || undefined,
+          ar: descriptionAr.trim() || undefined,
+        },
+        slug,
+        parent: parentId,
+      };
       return isEdit ? categoryService.update(categoryId as string, payload) : categoryService.create(payload);
     },
     {
@@ -64,11 +85,18 @@ export default function AdminCategoryFormScreen({ route, navigation }: RootStack
       queryClient.invalidateQueries(queryKeys.CATEGORY_TREE);
       navigation.goBack();
     },
+    onError: (deleteError) => {
+      Alert.alert(t('common.error'), getErrorMessage(deleteError));
+    },
   });
 
   const handleSave = () => {
     setError(null);
-    if (!nameEn.trim() || !nameFr.trim() || !nameAr.trim() || !slug.trim()) {
+    if (!nameEn.trim() && !nameFr.trim() && !nameAr.trim()) {
+      setError(t('admin.categories.nameRequired'));
+      return;
+    }
+    if (!slug.trim()) {
       setError(t('common.required'));
       return;
     }
@@ -95,6 +123,9 @@ export default function AdminCategoryFormScreen({ route, navigation }: RootStack
         <Input label={t('admin.categories.nameEn')} value={nameEn} onChangeText={setNameEn} />
         <Input label={t('admin.categories.nameFr')} value={nameFr} onChangeText={setNameFr} />
         <Input label={t('admin.categories.nameAr')} value={nameAr} onChangeText={setNameAr} />
+        <Input label={t('admin.categories.descriptionEn')} value={descriptionEn} onChangeText={setDescriptionEn} multiline />
+        <Input label={t('admin.categories.descriptionFr')} value={descriptionFr} onChangeText={setDescriptionFr} multiline />
+        <Input label={t('admin.categories.descriptionAr')} value={descriptionAr} onChangeText={setDescriptionAr} multiline />
         <Input label={t('admin.categories.slug')} value={slug} onChangeText={setSlug} autoCapitalize="none" />
 
         <Text style={[styles.label, { color: theme.colors.text }]}>{t('admin.categories.parent')}</Text>
@@ -131,6 +162,10 @@ export default function AdminCategoryFormScreen({ route, navigation }: RootStack
         ) : null}
 
         <Button title={t('common.save')} onPress={handleSave} loading={saveMutation.isLoading} fullWidth style={styles.saveButton} />
+
+        {deleteMutation.isError ? (
+          <Text style={[styles.error, { color: theme.colors.danger }]}>{getErrorMessage(deleteMutation.error)}</Text>
+        ) : null}
         {isEdit ? (
           <Button
             title={t('admin.categories.delete')}

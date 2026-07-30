@@ -1,6 +1,5 @@
 import { API_URL } from '../constants';
 import { apiService } from './api';
-import { tokenStorage } from './tokenStorage';
 import { QueryBuilder } from './QueryBuilder';
 import { FilterOption, I18nText, PaginationResponse, Product } from '../models';
 
@@ -13,7 +12,7 @@ export type ProductPayload = {
   thickness?: string;
   texture?: string;
   applicationDomains?: string[];
-  category: string;
+  categories: string[];
   stock?: number;
 };
 
@@ -62,21 +61,11 @@ class ProductService {
       } as unknown as Blob);
     });
 
-    const token = await tokenStorage.getAccessToken();
-    const response = await fetch(`${API_URL}/api/products/${id}/images`, {
-      method: 'POST',
-      headers: {
-        Authorization: token ? `Bearer ${token}` : '',
-        Accept: 'application/json',
-      },
-      body: formData,
+    // Routed through the shared apiService (not raw fetch) so the request/401-refresh
+    // interceptors apply the same way they do for every other authenticated call.
+    return apiService.post<Product>(`/api/products/${id}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(text || `Upload failed with status ${response.status}`);
-    }
-    return response.json();
   }
 
   async removeImage(id: string, path: string): Promise<Product> {

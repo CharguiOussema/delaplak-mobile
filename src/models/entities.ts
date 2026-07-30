@@ -19,6 +19,7 @@ export type User = {
 export type Category = {
   _id: string;
   name: I18nText;
+  description?: I18nText;
   slug: string;
   parent: string | null;
   createdAt: string;
@@ -40,7 +41,7 @@ export type Product = {
   thickness: string;
   texture: string;
   applicationDomains: string[];
-  category: string | Category;
+  categories: (string | Category)[];
   stock: number;
   createdAt: string;
   updatedAt: string;
@@ -63,6 +64,7 @@ export type OrderItem = {
   product: string;
   name: I18nText;
   price: number;
+  currency: string;
   quantity: number;
 };
 
@@ -71,9 +73,12 @@ export type Order = {
   client: string | User;
   items: OrderItem[];
   totalAmount: number;
+  currency: string;
   status: ORDER_STATUS;
   confirmedBy: string | User | null;
   confirmedAt: string | null;
+  cancelledBy: string | User | null;
+  cancelledAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -93,6 +98,7 @@ export type Invoice = {
   lines: InvoiceLine[];
   subtotal: number;
   total: number;
+  currency: string;
   pdfPath: string;
   issuedAt: string;
   createdAt: string;

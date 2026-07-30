@@ -22,7 +22,7 @@ export default function AdminUserFormScreen({ route, navigation }: RootStackScre
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<USER_ROLES>(USER_ROLES.CLIENT);
+  const [role, setRole] = useState<USER_ROLES | null>(null);
   const [isActive, setIsActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,9 +40,9 @@ export default function AdminUserFormScreen({ route, navigation }: RootStackScre
   const saveMutation = useMutation(
     async () => {
       if (isEdit) {
-        return userService.update(userId as string, { email, role, isActive });
+        return userService.update(userId as string, { email, role: role as USER_ROLES, isActive });
       }
-      return userService.create({ email, password, role });
+      return userService.create({ email, password, role: role as USER_ROLES });
     },
     {
       onSuccess: () => {
@@ -57,12 +57,19 @@ export default function AdminUserFormScreen({ route, navigation }: RootStackScre
       queryClient.invalidateQueries(queryKeys.USERS);
       navigation.goBack();
     },
+    onError: (deactivateError) => {
+      Alert.alert(t('common.error'), getErrorMessage(deactivateError));
+    },
   });
 
   const handleSave = () => {
     setError(null);
     if (!email.trim()) {
       setError(t('common.required'));
+      return;
+    }
+    if (!role) {
+      setError(t('admin.users.roleRequired'));
       return;
     }
     saveMutation.mutate();
@@ -116,6 +123,10 @@ export default function AdminUserFormScreen({ route, navigation }: RootStackScre
       {saveMutation.isError ? <Text style={[styles.error, { color: theme.colors.danger }]}>{getErrorMessage(saveMutation.error)}</Text> : null}
 
       <Button title={t('common.save')} onPress={handleSave} loading={saveMutation.isLoading} fullWidth style={styles.saveButton} />
+
+      {deactivateMutation.isError ? (
+        <Text style={[styles.error, { color: theme.colors.danger }]}>{getErrorMessage(deactivateMutation.error)}</Text>
+      ) : null}
 
       {isEdit ? (
         <Button

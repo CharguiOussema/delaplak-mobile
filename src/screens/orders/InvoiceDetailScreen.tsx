@@ -64,18 +64,18 @@ export default function InvoiceDetailScreen({ route }: RootStackScreenProps<'Inv
             <Text style={[styles.lineDescription, { color: theme.colors.text }]} numberOfLines={2}>
               {item.quantity} × {item.description}
             </Text>
-            <Text style={[styles.lineTotal, { color: theme.colors.text }]}>{formatCurrency(item.lineTotal)}</Text>
+            <Text style={[styles.lineTotal, { color: theme.colors.text }]}>{formatCurrency(item.lineTotal, invoice.currency)}</Text>
           </View>
         )}
       />
 
       <View style={styles.summaryRow}>
         <Text style={{ color: theme.colors.textMuted }}>{t('invoice.subtotal')}</Text>
-        <Text style={{ color: theme.colors.text }}>{formatCurrency(invoice.subtotal)}</Text>
+        <Text style={{ color: theme.colors.text }}>{formatCurrency(invoice.subtotal, invoice.currency)}</Text>
       </View>
       <View style={styles.summaryRow}>
         <Text style={[styles.totalLabel, { color: theme.colors.text }]}>{t('invoice.total')}</Text>
-        <Text style={[styles.totalValue, { color: theme.colors.text }]}>{formatCurrency(invoice.total)}</Text>
+        <Text style={[styles.totalValue, { color: theme.colors.text }]}>{formatCurrency(invoice.total, invoice.currency)}</Text>
       </View>
 
       {downloadError ? <Text style={[styles.error, { color: theme.colors.danger }]}>{downloadError}</Text> : null}

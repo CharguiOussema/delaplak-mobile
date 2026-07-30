@@ -33,7 +33,7 @@ export default function InvoicesListScreen({ navigation }: RootStackScreenProps<
     >
       <View style={styles.cardHeader}>
         <Text style={[styles.number, { color: theme.colors.text }]}>{item.number}</Text>
-        <Text style={[styles.total, { color: theme.colors.text }]}>{formatCurrency(item.total)}</Text>
+        <Text style={[styles.total, { color: theme.colors.text }]}>{formatCurrency(item.total, item.currency)}</Text>
       </View>
       <Text style={[styles.date, { color: theme.colors.textMuted }]}>{formatDate(item.issuedAt)}</Text>
     </Pressable>

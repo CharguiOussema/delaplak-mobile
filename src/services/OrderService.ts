@@ -24,6 +24,11 @@ class OrderService {
   async confirm(id: string): Promise<{ order: Order; invoice: Invoice }> {
     return apiService.patch<{ order: Order; invoice: Invoice }>(`/api/orders/${id}/confirm`);
   }
+
+  /** ADMIN-only, mirrors confirm's one-way PENDING-only rule. Returns the updated order directly. */
+  async cancel(id: string): Promise<Order> {
+    return apiService.patch<Order>(`/api/orders/${id}/cancel`);
+  }
 }
 
 export const orderService = new OrderService();

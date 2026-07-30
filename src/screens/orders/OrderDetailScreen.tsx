@@ -44,10 +44,24 @@ export default function OrderDetailScreen({ route, navigation }: RootStackScreen
     },
   });
 
+  const cancelMutation = useMutation(() => orderService.cancel(orderId), {
+    onSuccess: () => {
+      queryClient.invalidateQueries(queryKeys.ORDER);
+      queryClient.invalidateQueries(queryKeys.ORDERS);
+    },
+  });
+
   const handleConfirm = () => {
     Alert.alert(t('orders.confirm'), t('orders.confirmConfirm'), [
       { text: t('common.cancel'), style: 'cancel' },
       { text: t('common.confirm'), onPress: () => confirmMutation.mutate() },
+    ]);
+  };
+
+  const handleCancel = () => {
+    Alert.alert(t('orderDetail.cancelAction'), t('orderDetail.cancelConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('orderDetail.cancelAction'), style: 'destructive', onPress: () => cancelMutation.mutate() },
     ]);
   };
 
@@ -58,6 +72,10 @@ export default function OrderDetailScreen({ route, navigation }: RootStackScreen
 
   const order = orderQuery.data;
   const confirmedByUser = typeof order.confirmedBy === 'object' ? (order.confirmedBy as User) : null;
+  const cancelledByUser = typeof order.cancelledBy === 'object' ? (order.cancelledBy as User) : null;
+  // Single source of truth for both action buttons: once an order leaves PENDING
+  // (confirmed or cancelled), the decision is final and neither button renders.
+  const canActOnPending = canConfirmOrders && order.status === ORDER_STATUS.PENDING;
 
   return (
     <Screen scroll>
@@ -79,14 +97,14 @@ export default function OrderDetailScreen({ route, navigation }: RootStackScreen
             <Text style={[styles.itemName, { color: theme.colors.text }]} numberOfLines={1}>
               {item.quantity} × {pickI18nText(item.name, language)}
             </Text>
-            <Text style={[styles.itemTotal, { color: theme.colors.text }]}>{formatCurrency(item.price * item.quantity)}</Text>
+            <Text style={[styles.itemTotal, { color: theme.colors.text }]}>{formatCurrency(item.price * item.quantity, item.currency)}</Text>
           </View>
         )}
       />
 
       <View style={styles.totalRow}>
         <Text style={[styles.totalLabel, { color: theme.colors.text }]}>{t('orderDetail.total')}</Text>
-        <Text style={[styles.totalValue, { color: theme.colors.text }]}>{formatCurrency(order.totalAmount)}</Text>
+        <Text style={[styles.totalValue, { color: theme.colors.text }]}>{formatCurrency(order.totalAmount, order.currency)}</Text>
       </View>
 
       {order.status === ORDER_STATUS.CONFIRMED ? (
@@ -104,7 +122,22 @@ export default function OrderDetailScreen({ route, navigation }: RootStackScreen
         </View>
       ) : null}
 
-      {canConfirmOrders && order.status === ORDER_STATUS.PENDING ? (
+      {order.status === ORDER_STATUS.CANCELLED ? (
+        <View style={styles.confirmedInfo}>
+          {cancelledByUser ? (
+            <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+              {t('orderDetail.cancelledBy')}: {cancelledByUser.email}
+            </Text>
+          ) : null}
+          {order.cancelledAt ? (
+            <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+              {t('orderDetail.cancelledAt')}: {formatDateTime(order.cancelledAt)}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+
+      {canActOnPending ? (
         <Button
           title={t('orderDetail.confirmAction')}
           onPress={handleConfirm}
@@ -115,6 +148,20 @@ export default function OrderDetailScreen({ route, navigation }: RootStackScreen
       ) : null}
       {confirmMutation.isError ? (
         <Text style={[styles.error, { color: theme.colors.danger }]}>{getErrorMessage(confirmMutation.error)}</Text>
+      ) : null}
+
+      {canActOnPending ? (
+        <Button
+          title={t('orderDetail.cancelAction')}
+          variant="danger"
+          onPress={handleCancel}
+          loading={cancelMutation.isLoading}
+          fullWidth
+          style={styles.actionButton}
+        />
+      ) : null}
+      {cancelMutation.isError ? (
+        <Text style={[styles.error, { color: theme.colors.danger }]}>{getErrorMessage(cancelMutation.error)}</Text>
       ) : null}
 
       {order.status === ORDER_STATUS.CONFIRMED ? (

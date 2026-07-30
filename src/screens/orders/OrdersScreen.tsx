@@ -47,7 +47,7 @@ export default function OrdersScreen({ navigation }: MainTabScreenProps<'OrdersT
         <Text style={[styles.items, { color: theme.colors.textMuted }]}>
           {item.items.length} {t('orders.items').toLowerCase()}
         </Text>
-        <Text style={[styles.total, { color: theme.colors.text }]}>{formatCurrency(item.totalAmount)}</Text>
+        <Text style={[styles.total, { color: theme.colors.text }]}>{formatCurrency(item.totalAmount, item.currency)}</Text>
       </View>
     </Pressable>
   );

@@ -7,7 +7,7 @@ class CartService {
   }
 
   async addItem(productId: string, quantity: number): Promise<Cart> {
-    return apiService.post<Cart>('/api/cart/items', { productId, quantity });
+    return apiService.post<Cart>('/api/cart/items', { product: productId, quantity });
   }
 
   async setItemQuantity(productId: string, quantity: number): Promise<Cart> {

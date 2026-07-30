@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import * as ImagePicker from 'expo-image-picker';
-import { useAccess, useTheme } from '../../../hooks';
+import { useAccess, useApp, useTheme } from '../../../hooks';
 import { AccessControl } from '../../../components/AccessControl';
 import { Button, ErrorState, Input, LoadingState, Screen } from '../../../components/ui';
 import { productService } from '../../../services/ProductService';
 import { categoryService } from '../../../services/CategoryService';
 import { queryKeys } from '../../../services/QueryClientManager';
 import { getErrorMessage } from '../../../utils/errorHandling';
+import { pickI18nText } from '../../../utils/format';
+import type { FilterOption } from '../../../models';
 import { spacing, radius, typography } from '../../../theme/theme';
 import type { RootStackScreenProps } from '../../../navigation/types';
 
@@ -18,6 +20,7 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
   const isEdit = !!productId;
   const { t } = useTranslation();
   const theme = useTheme();
+  const { language } = useApp();
   const { canWriteProducts } = useAccess();
   const queryClient = useQueryClient();
 
@@ -33,15 +36,28 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
   const [descriptionFr, setDescriptionFr] = useState('');
   const [descriptionAr, setDescriptionAr] = useState('');
   const [price, setPrice] = useState('');
-  const [currency, setCurrency] = useState('MAD');
+  const [currency, setCurrency] = useState('TND');
   const [dimensions, setDimensions] = useState('');
   const [thickness, setThickness] = useState('');
   const [texture, setTexture] = useState('');
   const [applicationDomains, setApplicationDomains] = useState('');
-  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [stock, setStock] = useState('0');
   const [error, setError] = useState<string | null>(null);
   const [pickedImages, setPickedImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
+
+  // Categories created inline via the "+ Add category" modal, kept locally until the
+  // CATEGORY_FILTER query refetches so they show up in the picker immediately.
+  const [extraCategoryOptions, setExtraCategoryOptions] = useState<FilterOption[]>([]);
+  const [isAddCategoryVisible, setAddCategoryVisible] = useState(false);
+  const [qcNameEn, setQcNameEn] = useState('');
+  const [qcNameFr, setQcNameFr] = useState('');
+  const [qcNameAr, setQcNameAr] = useState('');
+  const [qcDescriptionEn, setQcDescriptionEn] = useState('');
+  const [qcDescriptionFr, setQcDescriptionFr] = useState('');
+  const [qcDescriptionAr, setQcDescriptionAr] = useState('');
+  const [qcSlug, setQcSlug] = useState('');
+  const [qcError, setQcError] = useState<string | null>(null);
 
   useEffect(() => {
     if (productQuery.data) {
@@ -58,7 +74,7 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
       setThickness(p.thickness);
       setTexture(p.texture);
       setApplicationDomains(p.applicationDomains.join(', '));
-      setCategoryId(typeof p.category === 'string' ? p.category : p.category._id);
+      setCategoryIds(p.categories.map((c) => (typeof c === 'string' ? c : c._id)));
       setStock(String(p.stock));
     }
   }, [productQuery.data]);
@@ -77,7 +93,7 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
           .split(',')
           .map((d) => d.trim())
           .filter(Boolean),
-        category: categoryId as string,
+        categories: categoryIds,
         stock: Number(stock) || 0,
       };
       return isEdit ? productService.update(productId as string, payload) : productService.create(payload);
@@ -136,8 +152,12 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
 
   const handleSave = () => {
     setError(null);
-    if (!nameEn.trim() || !nameFr.trim() || !nameAr.trim() || !categoryId || !price) {
+    if (!nameEn.trim() || !nameFr.trim() || !nameAr.trim() || !price) {
       setError(t('common.required'));
+      return;
+    }
+    if (categoryIds.length === 0) {
+      setError(t('admin.products.categoryRequired'));
       return;
     }
     saveMutation.mutate();
@@ -155,14 +175,80 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
       queryClient.invalidateQueries(queryKeys.PRODUCTS);
       navigation.goBack();
     },
+    onError: (deleteError) => {
+      Alert.alert(t('common.error'), getErrorMessage(deleteError));
+    },
   });
+
+  const toggleCategory = (id: string) => {
+    setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
+  };
+
+  const resetQuickAddForm = () => {
+    setQcNameEn('');
+    setQcNameFr('');
+    setQcNameAr('');
+    setQcDescriptionEn('');
+    setQcDescriptionFr('');
+    setQcDescriptionAr('');
+    setQcSlug('');
+    setQcError(null);
+  };
+
+  const addCategoryMutation = useMutation(
+    () =>
+      categoryService.create({
+        name: {
+          en: qcNameEn.trim() || undefined,
+          fr: qcNameFr.trim() || undefined,
+          ar: qcNameAr.trim() || undefined,
+        },
+        description: {
+          en: qcDescriptionEn.trim() || undefined,
+          fr: qcDescriptionFr.trim() || undefined,
+          ar: qcDescriptionAr.trim() || undefined,
+        },
+        slug: qcSlug.trim(),
+        parent: null,
+      }),
+    {
+      onSuccess: (category) => {
+        queryClient.invalidateQueries(queryKeys.CATEGORY_FILTER);
+        queryClient.invalidateQueries(queryKeys.CATEGORIES);
+        setExtraCategoryOptions((prev) => [...prev, { value: category._id, label: pickI18nText(category.name, language) }]);
+        setCategoryIds((prev) => [...prev, category._id]);
+        resetQuickAddForm();
+        setAddCategoryVisible(false);
+      },
+      onError: (addError) => {
+        setQcError(getErrorMessage(addError));
+      },
+    },
+  );
+
+  const handleQuickAddCategory = () => {
+    setQcError(null);
+    if (!qcNameEn.trim() && !qcNameFr.trim() && !qcNameAr.trim()) {
+      setQcError(t('admin.categories.nameRequired'));
+      return;
+    }
+    if (!qcSlug.trim()) {
+      setQcError(t('common.required'));
+      return;
+    }
+    addCategoryMutation.mutate();
+  };
 
   if (isEdit && productQuery.isLoading) return <LoadingState />;
   if (isEdit && productQuery.isError) {
     return <ErrorState message={getErrorMessage(productQuery.error)} onRetry={() => productQuery.refetch()} />;
   }
 
-  const categoryOptions = categoriesQuery.data ?? [];
+  const fetchedCategoryOptions = categoriesQuery.data ?? [];
+  const categoryOptions = [
+    ...fetchedCategoryOptions,
+    ...extraCategoryOptions.filter((extra) => !fetchedCategoryOptions.some((option) => option.value === extra.value)),
+  ];
   const existingImages = productQuery.data?.images ?? [];
   const isSaving = saveMutation.isLoading || uploadImagesMutation.isLoading;
 
@@ -187,21 +273,33 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
 
         <Text style={[styles.label, { color: theme.colors.text }]}>{t('admin.products.category')}</Text>
         <View style={styles.optionsRow}>
-          {categoryOptions.map((option) => (
-            <Pressable
-              key={option.value}
-              onPress={() => setCategoryId(option.value)}
-              style={[
-                styles.option,
-                {
-                  backgroundColor: categoryId === option.value ? theme.colors.primary : theme.colors.surfaceAlt,
-                  borderColor: theme.colors.border,
-                },
-              ]}
-            >
-              <Text style={{ color: categoryId === option.value ? theme.colors.primaryText : theme.colors.text }}>{option.label}</Text>
-            </Pressable>
-          ))}
+          {categoryOptions.map((option) => {
+            const selected = categoryIds.includes(option.value);
+            return (
+              <Pressable
+                key={option.value}
+                onPress={() => toggleCategory(option.value)}
+                style={[
+                  styles.option,
+                  {
+                    backgroundColor: selected ? theme.colors.primary : theme.colors.surfaceAlt,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
+              >
+                <Text style={{ color: selected ? theme.colors.primaryText : theme.colors.text }}>
+                  {selected ? '✓ ' : ''}
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+          <Pressable
+            onPress={() => setAddCategoryVisible(true)}
+            style={[styles.option, { backgroundColor: theme.colors.surfaceAlt, borderColor: theme.colors.border }]}
+          >
+            <Text style={{ color: theme.colors.primary }}>{t('admin.products.addCategory')}</Text>
+          </Pressable>
         </View>
 
         <Text style={[styles.label, { color: theme.colors.text }]}>{t('admin.products.images')}</Text>
@@ -238,6 +336,9 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
         ) : null}
 
         <Button title={t('common.save')} onPress={handleSave} loading={isSaving} fullWidth style={styles.saveButton} />
+        {deleteMutation.isError ? (
+          <Text style={[styles.error, { color: theme.colors.danger }]}>{getErrorMessage(deleteMutation.error)}</Text>
+        ) : null}
         {isEdit ? (
           <Button
             title={t('admin.products.delete')}
@@ -249,6 +350,44 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
           />
         ) : null}
       </Screen>
+
+      <Modal
+        visible={isAddCategoryVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAddCategoryVisible(false)}
+      >
+        <View style={styles.overlay}>
+          <ScrollView contentContainerStyle={[styles.modalCard, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.title, { color: theme.colors.text, fontSize: 18 }]}>{t('admin.products.addCategoryTitle')}</Text>
+            <Input label={t('admin.categories.nameEn')} value={qcNameEn} onChangeText={setQcNameEn} />
+            <Input label={t('admin.categories.nameFr')} value={qcNameFr} onChangeText={setQcNameFr} />
+            <Input label={t('admin.categories.nameAr')} value={qcNameAr} onChangeText={setQcNameAr} />
+            <Input label={t('admin.categories.descriptionEn')} value={qcDescriptionEn} onChangeText={setQcDescriptionEn} multiline />
+            <Input label={t('admin.categories.descriptionFr')} value={qcDescriptionFr} onChangeText={setQcDescriptionFr} multiline />
+            <Input label={t('admin.categories.descriptionAr')} value={qcDescriptionAr} onChangeText={setQcDescriptionAr} multiline />
+            <Input label={t('admin.categories.slug')} value={qcSlug} onChangeText={setQcSlug} autoCapitalize="none" />
+            {qcError ? <Text style={[styles.error, { color: theme.colors.danger }]}>{qcError}</Text> : null}
+            <View style={styles.modalActions}>
+              <Button
+                title={t('common.cancel')}
+                variant="ghost"
+                onPress={() => {
+                  resetQuickAddForm();
+                  setAddCategoryVisible(false);
+                }}
+                style={styles.modalActionButton}
+              />
+              <Button
+                title={t('common.save')}
+                onPress={handleQuickAddCategory}
+                loading={addCategoryMutation.isLoading}
+                style={styles.modalActionButton}
+              />
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
     </AccessControl>
   );
 }
@@ -276,4 +415,23 @@ const styles = StyleSheet.create({
   error: { ...typography.small, marginBottom: spacing.sm },
   saveButton: { marginTop: spacing.md },
   deleteButton: { marginTop: spacing.md },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: 16,
+    padding: spacing.lg,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  modalActionButton: { flexShrink: 0 },
 });
