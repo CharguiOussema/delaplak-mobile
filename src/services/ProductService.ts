@@ -3,14 +3,18 @@ import { apiService } from './api';
 import { QueryBuilder } from './QueryBuilder';
 import { FilterOption, I18nText, PaginationResponse, Product } from '../models';
 
+export type ProductAttributeSelectionPayload = {
+  attribute: string;
+  option: string;
+  priceAdjustment: number;
+};
+
 export type ProductPayload = {
   name: I18nText;
   description: I18nText;
   price: number;
   currency?: string;
-  dimensions?: string;
-  thickness?: string;
-  texture?: string;
+  attributeOptions?: ProductAttributeSelectionPayload[];
   applicationDomains?: string[];
   categories: string[];
   stock?: number;

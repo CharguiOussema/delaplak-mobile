@@ -29,6 +29,7 @@ export const useAccess = () => {
     canManageUsers: isAdmin,
     canWriteCategories: isAdmin,
     canWriteProducts: isAdmin,
+    canWriteProductAttributes: isAdmin,
     canConfirmOrders: isAdmin,
     canUseCart: isClient,
     canCheckout: isClient,

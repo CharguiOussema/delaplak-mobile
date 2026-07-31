@@ -15,6 +15,8 @@ import AdminCategoryTreeScreen from '../screens/admin/categories/AdminCategoryTr
 import AdminCategoryFormScreen from '../screens/admin/categories/AdminCategoryFormScreen';
 import AdminProductsListScreen from '../screens/admin/products/AdminProductsListScreen';
 import AdminProductFormScreen from '../screens/admin/products/AdminProductFormScreen';
+import AdminProductAttributesListScreen from '../screens/admin/productAttributes/AdminProductAttributesListScreen';
+import AdminProductAttributeFormScreen from '../screens/admin/productAttributes/AdminProductAttributeFormScreen';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -58,6 +60,17 @@ export default function AppStackNavigator() {
         name="AdminProductForm"
         component={AdminProductFormScreen}
         options={({ route }) => ({ title: route.params?.productId ? t('admin.products.edit') : t('admin.products.add') })}
+      />
+
+      <Stack.Screen
+        name="AdminProductAttributesList"
+        component={AdminProductAttributesListScreen}
+        options={{ title: t('admin.productAttributes.title') }}
+      />
+      <Stack.Screen
+        name="AdminProductAttributeForm"
+        component={AdminProductAttributeFormScreen}
+        options={({ route }) => ({ title: route.params?.attributeId ? t('admin.productAttributes.edit') : t('admin.productAttributes.add') })}
       />
     </Stack.Navigator>
   );

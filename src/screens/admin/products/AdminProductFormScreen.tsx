@@ -8,10 +8,11 @@ import { AccessControl } from '../../../components/AccessControl';
 import { Button, ErrorState, Input, LoadingState, Screen } from '../../../components/ui';
 import { productService } from '../../../services/ProductService';
 import { categoryService } from '../../../services/CategoryService';
+import { productAttributeService } from '../../../services/ProductAttributeService';
 import { queryKeys } from '../../../services/QueryClientManager';
 import { getErrorMessage } from '../../../utils/errorHandling';
 import { pickI18nText } from '../../../utils/format';
-import type { FilterOption } from '../../../models';
+import type { FilterOption, ProductAttribute } from '../../../models';
 import { spacing, radius, typography } from '../../../theme/theme';
 import type { RootStackScreenProps } from '../../../navigation/types';
 
@@ -28,6 +29,7 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
     enabled: isEdit,
   });
   const categoriesQuery = useQuery([queryKeys.CATEGORY_FILTER], () => categoryService.getFilter());
+  const attributeTypesQuery = useQuery([queryKeys.PRODUCT_ATTRIBUTES], () => productAttributeService.getAll({ limit: 100 }));
 
   const [nameEn, setNameEn] = useState('');
   const [nameFr, setNameFr] = useState('');
@@ -37,14 +39,16 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
   const [descriptionAr, setDescriptionAr] = useState('');
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState('TND');
-  const [dimensions, setDimensions] = useState('');
-  const [thickness, setThickness] = useState('');
-  const [texture, setTexture] = useState('');
   const [applicationDomains, setApplicationDomains] = useState('');
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [stock, setStock] = useState('0');
   const [error, setError] = useState<string | null>(null);
   const [pickedImages, setPickedImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
+
+  // Flattened rows mirroring the server payload shape: one row per (attribute, option) this
+  // product offers, each with its own price adjustment. Toggling an option in the picker
+  // below adds/removes a row; selected rows render an inline price adjustment input.
+  const [attributeOptionRows, setAttributeOptionRows] = useState<{ attribute: string; option: string; priceAdjustment: string }[]>([]);
 
   // Categories created inline via the "+ Add category" modal, kept locally until the
   // CATEGORY_FILTER query refetches so they show up in the picker immediately.
@@ -70,12 +74,16 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
       setDescriptionAr(p.description.ar);
       setPrice(String(p.price));
       setCurrency(p.currency);
-      setDimensions(p.dimensions);
-      setThickness(p.thickness);
-      setTexture(p.texture);
       setApplicationDomains(p.applicationDomains.join(', '));
       setCategoryIds(p.categories.map((c) => (typeof c === 'string' ? c : c._id)));
       setStock(String(p.stock));
+      setAttributeOptionRows(
+        p.attributeOptions.map((a) => ({
+          attribute: typeof a.attribute === 'string' ? a.attribute : a.attribute._id,
+          option: a.option,
+          priceAdjustment: String(a.priceAdjustment),
+        })),
+      );
     }
   }, [productQuery.data]);
 
@@ -86,15 +94,17 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
         description: { en: descriptionEn, fr: descriptionFr, ar: descriptionAr },
         price: Number(price) || 0,
         currency,
-        dimensions,
-        thickness,
-        texture,
         applicationDomains: applicationDomains
           .split(',')
           .map((d) => d.trim())
           .filter(Boolean),
         categories: categoryIds,
         stock: Number(stock) || 0,
+        attributeOptions: attributeOptionRows.map((row) => ({
+          attribute: row.attribute,
+          option: row.option,
+          priceAdjustment: Number(row.priceAdjustment) || 0,
+        })),
       };
       return isEdit ? productService.update(productId as string, payload) : productService.create(payload);
     },
@@ -184,6 +194,20 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
     setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
   };
 
+  const toggleAttributeOption = (attributeId: string, optionId: string) => {
+    setAttributeOptionRows((prev) =>
+      prev.some((row) => row.attribute === attributeId && row.option === optionId)
+        ? prev.filter((row) => !(row.attribute === attributeId && row.option === optionId))
+        : [...prev, { attribute: attributeId, option: optionId, priceAdjustment: '0' }],
+    );
+  };
+
+  const setAttributeOptionPrice = (attributeId: string, optionId: string, priceAdjustment: string) => {
+    setAttributeOptionRows((prev) =>
+      prev.map((row) => (row.attribute === attributeId && row.option === optionId ? { ...row, priceAdjustment } : row)),
+    );
+  };
+
   const resetQuickAddForm = () => {
     setQcNameEn('');
     setQcNameFr('');
@@ -251,6 +275,7 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
   ];
   const existingImages = productQuery.data?.images ?? [];
   const isSaving = saveMutation.isLoading || uploadImagesMutation.isLoading;
+  const attributeTypes: ProductAttribute[] = attributeTypesQuery.data?.docs ?? [];
 
   return (
     <AccessControl allowed={canWriteProducts}>
@@ -265,9 +290,6 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
         <Input label={t('admin.products.descriptionAr')} value={descriptionAr} onChangeText={setDescriptionAr} multiline />
         <Input label={t('admin.products.price')} value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
         <Input label={t('admin.products.currency')} value={currency} onChangeText={setCurrency} autoCapitalize="characters" />
-        <Input label={t('admin.products.dimensions')} value={dimensions} onChangeText={setDimensions} />
-        <Input label={t('admin.products.thickness')} value={thickness} onChangeText={setThickness} />
-        <Input label={t('admin.products.texture')} value={texture} onChangeText={setTexture} />
         <Input label={t('admin.products.applicationDomains')} value={applicationDomains} onChangeText={setApplicationDomains} />
         <Input label={t('admin.products.stock')} value={stock} onChangeText={setStock} keyboardType="number-pad" />
 
@@ -301,6 +323,61 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
             <Text style={{ color: theme.colors.primary }}>{t('admin.products.addCategory')}</Text>
           </Pressable>
         </View>
+
+        <Text style={[styles.label, { color: theme.colors.text }]}>{t('admin.products.settings')}</Text>
+        <Text style={[styles.hint, { color: theme.colors.textMuted }]}>{t('admin.products.settingsHint')}</Text>
+        {attributeTypes.length === 0 ? (
+          <Text style={[styles.body, { color: theme.colors.textMuted }]}>{t('admin.products.noAttributesYet')}</Text>
+        ) : (
+          attributeTypes.map((attribute) => {
+            const rowsForAttribute = attributeOptionRows.filter((row) => row.attribute === attribute._id);
+            return (
+              <View key={attribute._id} style={[styles.attributeCard, { borderColor: theme.colors.border }]}>
+                <Text style={[styles.attributeName, { color: theme.colors.text }]}>{pickI18nText(attribute.name, language)}</Text>
+                <View style={styles.optionsRow}>
+                  {attribute.options.map((option) => {
+                    const selected = rowsForAttribute.some((row) => row.option === option._id);
+                    return (
+                      <Pressable
+                        key={option._id}
+                        onPress={() => toggleAttributeOption(attribute._id, option._id)}
+                        style={[
+                          styles.option,
+                          {
+                            backgroundColor: selected ? theme.colors.primary : theme.colors.surfaceAlt,
+                            borderColor: theme.colors.border,
+                          },
+                        ]}
+                      >
+                        <Text style={{ color: selected ? theme.colors.primaryText : theme.colors.text }}>
+                          {selected ? '✓ ' : ''}
+                          {pickI18nText(option.name, language)}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                {rowsForAttribute.map((row) => {
+                  const option = attribute.options.find((o) => o._id === row.option);
+                  return (
+                    <View key={row.option} style={styles.priceRow}>
+                      <Text style={[styles.priceRowLabel, { color: theme.colors.text }]} numberOfLines={1}>
+                        {option ? pickI18nText(option.name, language) : row.option}
+                      </Text>
+                      <Input
+                        value={row.priceAdjustment}
+                        onChangeText={(value) => setAttributeOptionPrice(attribute._id, row.option, value)}
+                        keyboardType="numbers-and-punctuation"
+                        placeholder={t('admin.products.priceAdjustment') ?? undefined}
+                        style={styles.priceRowInput}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            );
+          })
+        )}
 
         <Text style={[styles.label, { color: theme.colors.text }]}>{t('admin.products.images')}</Text>
         {existingImages.length > 0 ? (
@@ -395,8 +472,15 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
 const styles = StyleSheet.create({
   title: { ...typography.h1, marginBottom: spacing.lg },
   label: { ...typography.small, fontWeight: '600', marginBottom: spacing.xs, marginTop: spacing.xs },
+  hint: { ...typography.tiny, marginBottom: spacing.sm },
+  body: { ...typography.body, marginBottom: spacing.md },
   optionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
   option: { paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: radius.full, borderWidth: 1 },
+  attributeCard: { borderWidth: StyleSheet.hairlineWidth, borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.md },
+  attributeName: { ...typography.bodyBold, marginBottom: spacing.sm },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  priceRowLabel: { ...typography.small, flex: 1 },
+  priceRowInput: { width: 90 },
   imagesRow: { marginBottom: spacing.sm },
   imageWrap: { marginRight: spacing.sm },
   image: { width: 80, height: 80, borderRadius: radius.md, marginRight: spacing.sm },

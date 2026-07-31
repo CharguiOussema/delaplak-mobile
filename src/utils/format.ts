@@ -1,9 +1,22 @@
 import type { Language } from '../contexts/AppContext';
-import type { I18nText } from '../models';
+import type { CartItem, I18nText, Product, ProductAttribute } from '../models';
 
 export function pickI18nText(value: I18nText | undefined | null, language: Language): string {
   if (!value) return '';
   return value[language] || value.en || '';
+}
+
+// Selected options only carry (attribute, option) ids — their display names live on the
+// populated product.attributeOptions[].attribute (a ProductAttribute doc with its options).
+export function describeSelectedOptions(item: CartItem & { product: Product }, language: Language): string[] {
+  return item.selectedOptions.map((selection) => {
+    const configured = item.product.attributeOptions.find(
+      (entry) => (typeof entry.attribute === 'string' ? entry.attribute : entry.attribute._id) === selection.attribute,
+    );
+    const attribute = typeof configured?.attribute === 'object' ? (configured.attribute as ProductAttribute) : undefined;
+    const option = attribute?.options.find((o) => o._id === selection.option);
+    return option ? pickI18nText(option.name, language) : selection.option;
+  });
 }
 
 export function formatCurrency(amount: number, currency = 'MAD'): string {

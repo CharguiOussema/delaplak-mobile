@@ -8,6 +8,8 @@ export const queryKeys = {
   PRODUCTS: 'products',
   PRODUCT_FILTER: 'productFilter',
   PRODUCT: 'product',
+  PRODUCT_ATTRIBUTES: 'productAttributes',
+  PRODUCT_ATTRIBUTE_FILTER: 'productAttributeFilter',
   CART: 'cart',
   ORDERS: 'orders',
   ORDER: 'order',

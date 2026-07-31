@@ -8,7 +8,7 @@ import { Button, EmptyState, ErrorState, LoadingState } from '../../components/u
 import { cartService } from '../../services/CartService';
 import { productService } from '../../services/ProductService';
 import { queryKeys } from '../../services/QueryClientManager';
-import { pickI18nText, formatCurrency } from '../../utils/format';
+import { pickI18nText, formatCurrency, describeSelectedOptions } from '../../utils/format';
 import { getErrorMessage } from '../../utils/errorHandling';
 import { spacing, radius, typography } from '../../theme/theme';
 import type { CartItem, Product } from '../../models';
@@ -25,10 +25,10 @@ export default function CartScreen({ navigation }: MainTabScreenProps<'CartTab'>
   const invalidate = () => queryClient.invalidateQueries(queryKeys.CART);
 
   const setQuantityMutation = useMutation(
-    ({ productId, quantity }: { productId: string; quantity: number }) => cartService.setItemQuantity(productId, quantity),
+    ({ itemId, quantity }: { itemId: string; quantity: number }) => cartService.setItemQuantity(itemId, quantity),
     { onSuccess: invalidate },
   );
-  const removeMutation = useMutation((productId: string) => cartService.removeItem(productId), { onSuccess: invalidate });
+  const removeMutation = useMutation((itemId: string) => cartService.removeItem(itemId), { onSuccess: invalidate });
   const clearMutation = useMutation(() => cartService.clear(), { onSuccess: invalidate });
 
   const handleClear = () => {
@@ -45,7 +45,7 @@ export default function CartScreen({ navigation }: MainTabScreenProps<'CartTab'>
 
   const items = cartQuery.data?.items ?? [];
   const populatedItems = items.filter((item): item is CartItem & { product: Product } => typeof item.product === 'object');
-  const total = populatedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const total = populatedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const currency = populatedItems[0]?.product.currency ?? 'MAD';
 
   return (
@@ -66,10 +66,11 @@ export default function CartScreen({ navigation }: MainTabScreenProps<'CartTab'>
         <>
           <FlatList
             data={populatedItems}
-            keyExtractor={(item) => item.product._id}
+            keyExtractor={(item) => item._id}
             contentContainerStyle={styles.listContent}
             renderItem={({ item }) => {
               const imageUri = item.product.images[0] ? productService.resolveImageUrl(item.product.images[0]) : undefined;
+              const optionLabels = describeSelectedOptions(item, language);
               return (
                 <View style={[styles.row, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
                   <View style={[styles.thumb, { backgroundColor: theme.colors.surfaceAlt }]}>
@@ -80,28 +81,32 @@ export default function CartScreen({ navigation }: MainTabScreenProps<'CartTab'>
                       {pickI18nText(item.product.name, language)}
                     </Text>
                     <Text style={[styles.itemPrice, { color: theme.colors.primary }]}>
-                      {formatCurrency(item.product.price, item.product.currency)}
+                      {formatCurrency(item.unitPrice, item.product.currency)}
                     </Text>
+                    {optionLabels.length > 0 ? (
+                      <View style={styles.optionsRow}>
+                        {optionLabels.map((label, index) => (
+                          <View key={index} style={[styles.optionChip, { backgroundColor: theme.colors.surfaceAlt }]}>
+                            <Text style={[styles.optionChipText, { color: theme.colors.textMuted }]}>{label}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    ) : null}
                     <View style={styles.quantityRow}>
                       <Button
                         title="-"
                         variant="outline"
                         size="sm"
-                        onPress={() =>
-                          setQuantityMutation.mutate({ productId: item.product._id, quantity: Math.max(1, item.quantity - 1) })
-                        }
+                        onPress={() => setQuantityMutation.mutate({ itemId: item._id, quantity: Math.max(1, item.quantity - 1) })}
                       />
                       <Text style={[styles.quantityValue, { color: theme.colors.text }]}>{item.quantity}</Text>
                       <Button
                         title="+"
                         variant="outline"
                         size="sm"
-                        onPress={() => setQuantityMutation.mutate({ productId: item.product._id, quantity: item.quantity + 1 })}
+                        onPress={() => setQuantityMutation.mutate({ itemId: item._id, quantity: item.quantity + 1 })}
                       />
-                      <Text
-                        style={[styles.remove, { color: theme.colors.danger }]}
-                        onPress={() => removeMutation.mutate(item.product._id)}
-                      >
+                      <Text style={[styles.remove, { color: theme.colors.danger }]} onPress={() => removeMutation.mutate(item._id)}>
                         {t('cart.remove')}
                       </Text>
                     </View>
@@ -149,6 +154,9 @@ const styles = StyleSheet.create({
   rowBody: { flex: 1, justifyContent: 'center', gap: 4 },
   itemName: { ...typography.bodyBold },
   itemPrice: { ...typography.small },
+  optionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 2 },
+  optionChip: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.full },
+  optionChipText: { ...typography.tiny },
   quantityRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 4 },
   quantityValue: { ...typography.bodyBold, minWidth: 20, textAlign: 'center' },
   remove: { ...typography.small, marginLeft: 'auto' },

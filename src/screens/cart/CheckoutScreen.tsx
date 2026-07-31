@@ -7,7 +7,7 @@ import { Button, ErrorState, LoadingState, Screen } from '../../components/ui';
 import { cartService } from '../../services/CartService';
 import { orderService } from '../../services/OrderService';
 import { queryKeys } from '../../services/QueryClientManager';
-import { pickI18nText, formatCurrency } from '../../utils/format';
+import { pickI18nText, formatCurrency, describeSelectedOptions } from '../../utils/format';
 import { getErrorMessage } from '../../utils/errorHandling';
 import { spacing, typography } from '../../theme/theme';
 import type { CartItem, Product } from '../../models';
@@ -53,7 +53,7 @@ export default function CheckoutScreen({ navigation }: RootStackScreenProps<'Che
 
   const items = cartQuery.data?.items ?? [];
   const populatedItems = items.filter((item): item is CartItem & { product: Product } => typeof item.product === 'object');
-  const total = populatedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const total = populatedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const currency = populatedItems[0]?.product.currency ?? 'MAD';
 
   return (
@@ -63,18 +63,28 @@ export default function CheckoutScreen({ navigation }: RootStackScreenProps<'Che
 
       <FlatList
         data={populatedItems}
-        keyExtractor={(item) => item.product._id}
+        keyExtractor={(item) => item._id}
         scrollEnabled={false}
-        renderItem={({ item }) => (
-          <View style={styles.summaryRow}>
-            <Text style={[styles.itemName, { color: theme.colors.text }]} numberOfLines={1}>
-              {item.quantity} × {pickI18nText(item.product.name, language)}
-            </Text>
-            <Text style={[styles.itemTotal, { color: theme.colors.text }]}>
-              {formatCurrency(item.product.price * item.quantity, item.product.currency)}
-            </Text>
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const optionLabels = describeSelectedOptions(item, language);
+          return (
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryRowBody}>
+                <Text style={[styles.itemName, { color: theme.colors.text }]} numberOfLines={1}>
+                  {item.quantity} × {pickI18nText(item.product.name, language)}
+                </Text>
+                {optionLabels.length > 0 ? (
+                  <Text style={[styles.itemOptions, { color: theme.colors.textMuted }]} numberOfLines={1}>
+                    {optionLabels.join(', ')}
+                  </Text>
+                ) : null}
+              </View>
+              <Text style={[styles.itemTotal, { color: theme.colors.text }]}>
+                {formatCurrency(item.unitPrice * item.quantity, item.product.currency)}
+              </Text>
+            </View>
+          );
+        }}
       />
 
       <View style={styles.totalRow}>
@@ -102,7 +112,9 @@ const styles = StyleSheet.create({
   title: { ...typography.h1, marginBottom: spacing.lg },
   sectionTitle: { ...typography.h3, marginBottom: spacing.sm },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.xs },
-  itemName: { ...typography.body, flex: 1, marginRight: spacing.sm },
+  summaryRowBody: { flex: 1, marginRight: spacing.sm },
+  itemName: { ...typography.body },
+  itemOptions: { ...typography.tiny, marginTop: 2 },
   itemTotal: { ...typography.bodyBold },
   totalRow: {
     flexDirection: 'row',

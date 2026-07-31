@@ -6,6 +6,7 @@ export { authService } from './AuthService';
 export { userService } from './UserService';
 export { categoryService } from './CategoryService';
 export { productService } from './ProductService';
+export { productAttributeService } from './ProductAttributeService';
 export { cartService } from './CartService';
 export { orderService } from './OrderService';
 export { invoiceService } from './InvoiceService';

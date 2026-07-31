@@ -30,6 +30,30 @@ export type CategoryTreeNode = Category & {
   children: CategoryTreeNode[];
 };
 
+export type AttributeOption = {
+  _id: string;
+  name: I18nText;
+};
+
+// Admin-managed vocabulary (e.g. Texture, Thickness, Dimensions). Carries no price — the
+// price impact of an option is product-specific, see Product.attributeOptions below.
+export type ProductAttribute = {
+  _id: string;
+  name: I18nText;
+  slug: string;
+  options: AttributeOption[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+// One entry per option this product offers, with the price it adds (or, if negative,
+// subtracts) when a client selects it. `attribute` is populated by the API.
+export type ProductAttributeSelection = {
+  attribute: ProductAttribute | string;
+  option: string;
+  priceAdjustment: number;
+};
+
 export type Product = {
   _id: string;
   name: I18nText;
@@ -37,9 +61,7 @@ export type Product = {
   images: string[];
   price: number;
   currency: string;
-  dimensions: string;
-  thickness: string;
-  texture: string;
+  attributeOptions: ProductAttributeSelection[];
   applicationDomains: string[];
   categories: (string | Category)[];
   stock: number;
@@ -47,9 +69,18 @@ export type Product = {
   updatedAt: string;
 };
 
+export type SelectedOption = {
+  attribute: string;
+  option: string;
+};
+
 export type CartItem = {
+  _id: string;
   product: Product | string;
   quantity: number;
+  selectedOptions: SelectedOption[];
+  // Computed by the API (base price + matching attributeOptions adjustments); not stored.
+  unitPrice: number;
 };
 
 export type Cart = {
@@ -60,12 +91,19 @@ export type Cart = {
   updatedAt: string;
 };
 
+export type OrderItemSelectedOption = {
+  attributeName: I18nText;
+  optionName: I18nText;
+  priceAdjustment: number;
+};
+
 export type OrderItem = {
   product: string;
   name: I18nText;
   price: number;
   currency: string;
   quantity: number;
+  selectedOptions: OrderItemSelectedOption[];
 };
 
 export type Order = {

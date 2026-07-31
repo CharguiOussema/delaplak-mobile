@@ -31,6 +31,8 @@ export type RootStackParamList = {
   AdminCategoryForm: { categoryId?: string } | undefined;
   AdminProductsList: undefined;
   AdminProductForm: { productId?: string } | undefined;
+  AdminProductAttributesList: undefined;
+  AdminProductAttributeForm: { attributeId?: string } | undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<RootStackParamList, T>;
