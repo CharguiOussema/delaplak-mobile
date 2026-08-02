@@ -87,7 +87,7 @@ export default function CheckoutScreen({ navigation }: RootStackScreenProps<'Che
         }}
       />
 
-      <View style={styles.totalRow}>
+      <View style={[styles.totalRow, { borderTopColor: theme.colors.border }]}>
         <Text style={[styles.totalLabel, { color: theme.colors.text }]}>{t('cart.total')}</Text>
         <Text style={[styles.totalValue, { color: theme.colors.text }]}>{formatCurrency(total, currency)}</Text>
       </View>
@@ -122,7 +122,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     paddingTop: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E2E8F0',
   },
   totalLabel: { ...typography.h3 },
   totalValue: { ...typography.h3 },

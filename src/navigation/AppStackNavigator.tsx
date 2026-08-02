@@ -30,7 +30,7 @@ export default function AppStackNavigator() {
       screenOptions={{
         headerStyle: { backgroundColor: theme.colors.surface },
         headerTintColor: theme.colors.text,
-        headerTitleStyle: { color: theme.colors.text },
+        headerTitleStyle: { color: theme.colors.text, fontWeight: '700' },
       }}
     >
       <Stack.Screen name="MainTabs" component={MainTabNavigator} options={{ headerShown: false }} />

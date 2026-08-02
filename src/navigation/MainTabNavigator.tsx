@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 import { useAccess, useTheme } from '../hooks';
+import { radius } from '../theme/theme';
 import CatalogScreen from '../screens/catalog/CatalogScreen';
 import CartScreen from '../screens/cart/CartScreen';
 import OrdersScreen from '../screens/orders/OrdersScreen';
@@ -31,7 +32,17 @@ export default function MainTabNavigator() {
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
-        tabBarStyle: { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border },
+        tabBarLabelStyle: { fontWeight: '600' },
+        tabBarStyle: {
+          backgroundColor: theme.colors.surface,
+          borderTopWidth: 0,
+          borderTopLeftRadius: radius.lg,
+          borderTopRightRadius: radius.lg,
+          height: 64,
+          paddingTop: 8,
+          boxShadow: '0px -4px 20px rgba(15, 23, 42, 0.08)',
+          elevation: 8,
+        },
         tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>{TAB_ICONS[route.name as keyof MainTabParamList]}</Text>,
       })}
     >

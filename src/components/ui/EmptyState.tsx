@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../hooks';
-import { spacing, typography } from '../../theme/theme';
+import { radius, spacing, typography } from '../../theme/theme';
 import { Button } from './Button';
 
 interface EmptyStateProps {
@@ -16,7 +16,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, message, ac
   const theme = useTheme();
   return (
     <View style={styles.container}>
-      {icon}
+      {icon ? <View style={[styles.iconBadge, { backgroundColor: theme.colors.primarySoft }]}>{icon}</View> : null}
       <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
       {message ? <Text style={[styles.message, { color: theme.colors.textMuted }]}>{message}</Text> : null}
       {actionLabel && onAction ? (
@@ -35,6 +35,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxl,
     paddingHorizontal: spacing.xl,
     gap: spacing.sm,
+  },
+  iconBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
   },
   title: {
     ...typography.h3,

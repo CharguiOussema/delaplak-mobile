@@ -389,7 +389,7 @@ export default function AdminProductFormScreen({ route, navigation }: RootStackS
                   style={[styles.removeBadge, { backgroundColor: theme.colors.danger }]}
                   onPress={() => removeImageMutation.mutate(path)}
                 >
-                  <Text style={styles.removeBadgeText}>×</Text>
+                  <Text style={[styles.removeBadgeText, { color: theme.colors.textInverse }]}>×</Text>
                 </Pressable>
               </View>
             ))}
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  removeBadgeText: { color: '#fff', fontSize: 14, lineHeight: 16 },
+  removeBadgeText: { fontSize: 14, lineHeight: 16 },
   pickButton: { marginBottom: spacing.md },
   error: { ...typography.small, marginBottom: spacing.sm },
   saveButton: { marginTop: spacing.md },

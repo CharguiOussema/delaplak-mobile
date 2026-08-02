@@ -54,6 +54,14 @@ export const Button: React.FC<ButtonProps> = ({
   const paddingVertical = { sm: 8, md: 12, lg: 16 }[size];
   const fontSize = { sm: 13, md: 15, lg: 17 }[size];
 
+  const tintedShadow = {
+    primary: { boxShadow: '0px 8px 20px rgba(236, 72, 153, 0.35)', elevation: 4 },
+    danger: { boxShadow: '0px 8px 20px rgba(239, 68, 68, 0.35)', elevation: 4 },
+    secondary: {},
+    outline: {},
+    ghost: {},
+  }[variant];
+
   return (
     <Pressable
       testID={testID}
@@ -69,6 +77,7 @@ export const Button: React.FC<ButtonProps> = ({
           opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1,
           width: fullWidth ? '100%' : undefined,
         },
+        !isDisabled && tintedShadow,
         style,
       ]}
     >
@@ -88,7 +97,7 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: radius.md,
+    borderRadius: radius.full,
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',

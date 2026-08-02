@@ -102,7 +102,7 @@ export default function OrderDetailScreen({ route, navigation }: RootStackScreen
         )}
       />
 
-      <View style={styles.totalRow}>
+      <View style={[styles.totalRow, { borderTopColor: theme.colors.border }]}>
         <Text style={[styles.totalLabel, { color: theme.colors.text }]}>{t('orderDetail.total')}</Text>
         <Text style={[styles.totalValue, { color: theme.colors.text }]}>{formatCurrency(order.totalAmount, order.currency)}</Text>
       </View>
@@ -199,7 +199,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E2E8F0',
   },
   totalLabel: { ...typography.h3 },
   totalValue: { ...typography.h3 },

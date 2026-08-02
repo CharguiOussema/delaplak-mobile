@@ -24,9 +24,11 @@ export const Input: React.FC<InputProps> = ({ label, error, helperText, style, .
           styles.input,
           {
             borderColor,
+            borderWidth: isFocused ? 1.5 : 1,
             backgroundColor: theme.colors.surface,
             color: theme.colors.text,
           },
+          isFocused && !error && styles.focusGlow,
           style,
         ]}
         onFocus={(e) => {
@@ -58,11 +60,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   input: {
-    borderWidth: 1,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     fontSize: typography.body.fontSize,
+  },
+  focusGlow: {
+    boxShadow: '0px 0px 0px 3px rgba(236, 72, 153, 0.15)',
   },
   helper: {
     ...typography.tiny,
