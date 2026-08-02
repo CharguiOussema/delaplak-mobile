@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useApp, useAccess, useTheme } from '../../hooks';
 import { Badge, Button, ErrorState, LoadingState, Screen } from '../../components/ui';
+import { RoomPreviewModal } from '../../components/product-preview/RoomPreviewModal';
 import { productService } from '../../services/ProductService';
 import { cartService } from '../../services/CartService';
 import { queryKeys } from '../../services/QueryClientManager';
@@ -44,6 +45,7 @@ export default function ProductDetailScreen({ route }: RootStackScreenProps<'Pro
   const [quantity, setQuantity] = useState(1);
   const [addedFeedback, setAddedFeedback] = useState(false);
   const [selections, setSelections] = useState<Record<string, string>>({});
+  const [previewVisible, setPreviewVisible] = useState(false);
 
   const productQuery = useQuery([queryKeys.PRODUCT, productId], () => productService.getById(productId));
 
@@ -124,6 +126,15 @@ export default function ProductDetailScreen({ route }: RootStackScreenProps<'Pro
         <Text style={[styles.name, { color: theme.colors.text }]}>{pickI18nText(product.name, language)}</Text>
         <Text style={[styles.price, { color: theme.colors.primary }]}>{formatCurrency(unitPrice, product.currency)}</Text>
         <Badge label={outOfStock ? t('catalog.outOfStock') : t('catalog.inStock')} tone={outOfStock ? 'danger' : 'success'} />
+
+        {canUseCart && images.length > 0 ? (
+          <Button
+            title={t('product.preview.cta')}
+            variant="outline"
+            onPress={() => setPreviewVisible(true)}
+            style={styles.previewButton}
+          />
+        ) : null}
 
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('product.detail.description')}</Text>
         <Text style={[styles.body, { color: theme.colors.textMuted }]}>{pickI18nText(product.description, language)}</Text>
@@ -209,6 +220,12 @@ export default function ProductDetailScreen({ route }: RootStackScreenProps<'Pro
           </View>
         ) : null}
       </View>
+
+      <RoomPreviewModal
+        visible={previewVisible}
+        onClose={() => setPreviewVisible(false)}
+        productImageUrl={productService.resolveImageUrl(images[0])}
+      />
     </Screen>
   );
 }
@@ -235,6 +252,7 @@ const styles = StyleSheet.create({
   content: { padding: spacing.lg },
   name: { ...typography.h1, marginBottom: spacing.xs },
   price: { ...typography.h2, marginBottom: spacing.sm },
+  previewButton: { marginTop: spacing.md, alignSelf: 'flex-start' },
   sectionTitle: { ...typography.h3, marginTop: spacing.lg, marginBottom: spacing.sm },
   body: { ...typography.body, lineHeight: 22 },
   specsGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.md },
