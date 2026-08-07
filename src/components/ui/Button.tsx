@@ -55,7 +55,7 @@ export const Button: React.FC<ButtonProps> = ({
   const fontSize = { sm: 13, md: 15, lg: 17 }[size];
 
   const tintedShadow = {
-    primary: { boxShadow: '0px 8px 20px rgba(236, 72, 153, 0.35)', elevation: 4 },
+    primary: { boxShadow: '0px 8px 20px rgba(184, 134, 62, 0.35)', elevation: 4 },
     danger: { boxShadow: '0px 8px 20px rgba(239, 68, 68, 0.35)', elevation: 4 },
     secondary: {},
     outline: {},
@@ -97,7 +97,7 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: radius.full,
+    borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
@@ -108,6 +108,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   text: {
+    fontFamily: typography.bodyBold.fontFamily,
     fontWeight: typography.bodyBold.fontWeight,
   },
 });

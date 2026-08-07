@@ -552,6 +552,16 @@
     "@babel/helper-string-parser" "^7.29.7"
     "@babel/helper-validator-identifier" "^7.29.7"
 
+"@expo-google-fonts/cormorant-garamond@^0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@expo-google-fonts/cormorant-garamond/-/cormorant-garamond-0.4.1.tgz#b748835a4c36e2ebe4ac042441d37feefc3affb6"
+  integrity sha512-e8J4Cn13K1txygamg50n3odLUsYP7Ck28XOGobMi7uDsWvFmp/jgK0qcALqJTlmi9NczSWUNdERxcLauHCBa/Q==
+
+"@expo-google-fonts/inter@^0.4.2":
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/@expo-google-fonts/inter/-/inter-0.4.2.tgz#2d37ffb1cb16600cff616b6c4c0efee9b6c47c28"
+  integrity sha512-syfiImMaDmq7cFi0of+waE2M4uSCyd16zgyWxdPOY7fN2VBmSLKEzkfbZgeOjJq61kSqPBNNtXjggiQiSD6gMQ==
+
 "@expo/cli@^57.0.10":
   version "57.0.10"
   resolved "https://registry.yarnpkg.com/@expo/cli/-/cli-57.0.10.tgz#199f151d1b9d7d6ea4f5b9fbc09d7750448601e5"
@@ -2062,6 +2072,15 @@ expo-sharing@~57.0.7:
     "@expo/config-plugins" "^57.0.6"
     "@expo/config-types" "^57.0.2"
     "@expo/plist" "^0.8.1"
+
+expo-splash-screen@~57.0.5:
+  version "57.0.5"
+  resolved "https://registry.yarnpkg.com/expo-splash-screen/-/expo-splash-screen-57.0.5.tgz#4a2dea41e6d5e6b2a531850d7f73736b98e0f3d6"
+  integrity sha512-ZN0LDXlhHRNFjXTYZDojXk8IfaoUIu7qa3hhoBTXgyj1UB/iewGlH6+M3Nvhun2lY2d/+xhwqMhv0hIRoBo09Q==
+  dependencies:
+    "@expo/config-plugins" "~57.0.6"
+    "@expo/image-utils" "^0.11.4"
+    xml2js "0.6.0"
 
 expo-status-bar@~57.0.1:
   version "57.0.1"

@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 import { useAccess, useTheme } from '../hooks';
 import { radius } from '../theme/theme';
+import HomeScreen from '../screens/home/HomeScreen';
 import CatalogScreen from '../screens/catalog/CatalogScreen';
 import CartScreen from '../screens/cart/CartScreen';
 import OrdersScreen from '../screens/orders/OrdersScreen';
@@ -14,6 +15,7 @@ import type { MainTabParamList } from './types';
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const TAB_ICONS: Record<keyof MainTabParamList, string> = {
+  HomeTab: '🏠',
   CatalogTab: '🧱',
   CartTab: '🛒',
   OrdersTab: '📦',
@@ -46,6 +48,7 @@ export default function MainTabNavigator() {
         tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>{TAB_ICONS[route.name as keyof MainTabParamList]}</Text>,
       })}
     >
+      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ tabBarLabel: t('nav.home') }} />
       <Tab.Screen name="CatalogTab" component={CatalogScreen} options={{ tabBarLabel: t('nav.catalog') }} />
       {canUseCart ? <Tab.Screen name="CartTab" component={CartScreen} options={{ tabBarLabel: t('nav.cart') }} /> : null}
       <Tab.Screen name="OrdersTab" component={OrdersScreen} options={{ tabBarLabel: t('nav.orders') }} />

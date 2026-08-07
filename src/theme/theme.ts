@@ -1,22 +1,21 @@
 // A small, original design system used across the in-house component set (src/components/ui).
-// Conceptually coordinated with the delaplak-web antd theme (src/theme/tokens.ts there): a
-// vivid rose primary paired with a violet accent, generous whitespace, rounded corners and a
-// bold type scale — but implemented independently for RN. Single white/light design — no dark mode.
+// Warm ivory/brass palette inspired by the "Atelier" reference template, extended with the
+// brand logo's blue accent, coordinated with delaplak-web's theme (src/theme/tokens.ts there).
+// Flat/near-square corners, generous whitespace, serif headings + sans body.
+// Single white/light design — no dark mode.
 
 const palette = {
-  rose50: '#FCE7F3',
-  rose500: '#EC4899',
-  rose600: '#DB2777',
-  rose700: '#9D174D',
-  violet500: '#8B5CF6',
-  violet600: '#7C3AED',
-  slate50: '#F8FAFC',
-  slate100: '#F1F5F9',
-  slate200: '#E2E8F0',
-  slate300: '#CBD5E1',
-  slate400: '#94A3B8',
-  slate500: '#64748B',
-  slate900: '#0F172A',
+  ivory: '#F6F1EA',
+  cream: '#EDE6DA',
+  sand: '#DBCFBE',
+  ink: '#1C1A17',
+  charcoal: '#3A362F',
+  stone: '#7A7267',
+  brass: '#B8863E',
+  brassDark: '#96692C',
+  brassSoft: '#F1E4CC',
+  azure: '#3E7CA6',
+  azureDark: '#2A5A78',
   white: '#FFFFFF',
   blue500: '#0EA5E9',
   blue100: '#E0F2FE',
@@ -30,19 +29,19 @@ const palette = {
 
 export const theme = {
   colors: {
-    background: palette.slate50,
+    background: palette.ivory,
     surface: palette.white,
-    surfaceAlt: palette.slate100,
-    border: palette.slate200,
-    text: palette.slate900,
-    textMuted: palette.slate500,
+    surfaceAlt: palette.cream,
+    border: palette.sand,
+    text: palette.ink,
+    textMuted: palette.stone,
     textInverse: palette.white,
-    primary: palette.rose500,
-    primaryHover: palette.rose600,
+    primary: palette.brass,
+    primaryHover: palette.brassDark,
     primaryText: palette.white,
-    primarySoft: palette.rose50,
-    accent: palette.violet500,
-    accentHover: palette.violet600,
+    primarySoft: palette.brassSoft,
+    accent: palette.azure,
+    accentHover: palette.azureDark,
     info: palette.blue500,
     infoSoft: palette.blue100,
     success: palette.green500,
@@ -51,7 +50,7 @@ export const theme = {
     dangerSoft: palette.red100,
     warning: palette.amber500,
     warningSoft: palette.amber100,
-    disabled: palette.slate300,
+    disabled: palette.sand,
   },
 };
 
@@ -67,19 +66,24 @@ export const spacing = {
 };
 
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 20,
+  sm: 2,
+  md: 4,
+  lg: 8,
   full: 999,
 };
 
+const serif = 'CormorantGaramond_600SemiBold';
+const sansRegular = 'Inter_400Regular';
+const sansMedium = 'Inter_500Medium';
+const sansSemiBold = 'Inter_600SemiBold';
+
 export const typography = {
-  h1: { fontSize: 30, fontWeight: '800' as const },
-  h2: { fontSize: 23, fontWeight: '800' as const },
-  h3: { fontSize: 18, fontWeight: '700' as const },
-  body: { fontSize: 15, fontWeight: '400' as const },
-  bodyBold: { fontSize: 15, fontWeight: '600' as const },
-  small: { fontSize: 13, fontWeight: '400' as const },
-  tiny: { fontSize: 11, fontWeight: '500' as const },
+  h1: { fontSize: 32, fontWeight: '600' as const, fontFamily: serif },
+  h2: { fontSize: 25, fontWeight: '600' as const, fontFamily: serif },
+  h3: { fontSize: 20, fontWeight: '600' as const, fontFamily: serif },
+  body: { fontSize: 15, fontWeight: '400' as const, fontFamily: sansRegular },
+  bodyBold: { fontSize: 15, fontWeight: '600' as const, fontFamily: sansSemiBold },
+  small: { fontSize: 13, fontWeight: '400' as const, fontFamily: sansRegular },
+  tiny: { fontSize: 11, fontWeight: '500' as const, fontFamily: sansMedium },
 };
 

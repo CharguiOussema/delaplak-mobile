@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     fontSize: typography.body.fontSize,
   },
   focusGlow: {
-    boxShadow: '0px 0px 0px 3px rgba(236, 72, 153, 0.15)',
+    boxShadow: '0px 0px 0px 3px rgba(184, 134, 62, 0.15)',
   },
   helper: {
     ...typography.tiny,

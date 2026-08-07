@@ -1,7 +1,7 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button } from './ui/Button';
-import { spacing, typography } from '../theme/theme';
+import { spacing, theme, typography } from '../theme/theme';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -53,9 +53,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.xl,
     gap: spacing.sm,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   title: { ...typography.h2, textAlign: 'center' },
-  message: { ...typography.body, textAlign: 'center', color: '#64748B' },
+  message: { ...typography.body, textAlign: 'center', color: theme.colors.textMuted },
   button: { marginTop: spacing.md },
 });

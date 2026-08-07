@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { useAuth, useTheme } from '../../hooks';
 import { Button, Input, Screen } from '../../components/ui';
@@ -30,6 +31,7 @@ export default function LoginScreen({ navigation }: AuthStackScreenProps<'Login'
 
   return (
     <Screen scroll>
+      <Image source={require('../../../assets/logo-full.png')} style={styles.logo} contentFit="contain" />
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.colors.text }]}>{t('auth.login.title')}</Text>
         <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>{t('auth.login.subtitle')}</Text>
@@ -73,7 +75,8 @@ export default function LoginScreen({ navigation }: AuthStackScreenProps<'Login'
 }
 
 const styles = StyleSheet.create({
-  header: { marginTop: spacing.xxl, marginBottom: spacing.xl },
+  logo: { width: '100%', height: 56, marginTop: spacing.xl },
+  header: { marginTop: spacing.xl, marginBottom: spacing.xl },
   title: { ...typography.h1 },
   subtitle: { ...typography.body, marginTop: spacing.xs },
   error: { ...typography.small, marginBottom: spacing.md },
