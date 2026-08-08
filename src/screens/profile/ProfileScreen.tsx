@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from 'react-query';
@@ -16,7 +16,36 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<'Profil
   const { t } = useTranslation();
   const theme = useTheme();
   const { language, setLanguage } = useApp();
-  const { user, logout } = useAuth();
+  const { user, logout, refetchUser } = useAuth();
+
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [accountError, setAccountError] = useState<string | null>(null);
+  const [accountSuccess, setAccountSuccess] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFullName(user.fullName);
+      setPhone(user.phone);
+    }
+  }, [user]);
+
+  const updateAccountMutation = useMutation(() => authService.updateProfile({ fullName, phone }), {
+    onSuccess: () => {
+      setAccountSuccess(true);
+      refetchUser();
+    },
+  });
+
+  const handleUpdateAccount = () => {
+    setAccountError(null);
+    setAccountSuccess(false);
+    if (!fullName.trim() || !phone.trim()) {
+      setAccountError(t('common.required'));
+      return;
+    }
+    updateAccountMutation.mutate();
+  };
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -63,6 +92,15 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<'Profil
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('profile.account')}</Text>
         <Text style={[styles.email, { color: theme.colors.text }]}>{user?.email}</Text>
         {user?.role ? <Badge label={user.role} tone="primary" /> : null}
+
+        <Input label={t('profile.fullName')} value={fullName} onChangeText={setFullName} autoCapitalize="words" />
+        <Input label={t('profile.phone')} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+        {accountError ? <Text style={[styles.error, { color: theme.colors.danger }]}>{accountError}</Text> : null}
+        {updateAccountMutation.isError ? (
+          <Text style={[styles.error, { color: theme.colors.danger }]}>{getErrorMessage(updateAccountMutation.error)}</Text>
+        ) : null}
+        {accountSuccess ? <Text style={[styles.success, { color: theme.colors.success }]}>{t('profile.accountUpdated')}</Text> : null}
+        <Button title={t('profile.save')} onPress={handleUpdateAccount} loading={updateAccountMutation.isLoading} fullWidth />
       </Card>
 
       <Pressable onPress={() => navigation.navigate('InvoicesList')}>

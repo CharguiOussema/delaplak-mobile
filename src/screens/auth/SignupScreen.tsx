@@ -6,12 +6,14 @@ import { useAuth, useTheme } from '../../hooks';
 import { Button, Input, Screen } from '../../components/ui';
 import { getErrorMessage } from '../../utils/errorHandling';
 import { spacing, typography } from '../../theme/theme';
-import type { AuthStackScreenProps } from '../../navigation/types';
+import type { RootStackScreenProps } from '../../navigation/types';
 
-export default function SignupScreen({ navigation }: AuthStackScreenProps<'Signup'>) {
+export default function SignupScreen({ navigation, route }: RootStackScreenProps<'Signup'>) {
   const { t } = useTranslation();
   const theme = useTheme();
   const { signup } = useAuth();
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -20,13 +22,27 @@ export default function SignupScreen({ navigation }: AuthStackScreenProps<'Signu
 
   const handleSubmit = async () => {
     setError(null);
+    if (!fullName.trim() || !phone.trim()) {
+      setError(t('common.required'));
+      return;
+    }
     if (password !== confirmPassword) {
       setError(t('auth.signup.passwordMismatch'));
       return;
     }
     setLoading(true);
     try {
-      await signup(email.trim(), password);
+      await signup(email.trim(), password, fullName.trim(), phone.trim());
+      const { redirectTo, redirectParams } = route.params ?? {};
+      if (redirectTo) {
+        // Dynamic redirect target: the destination route name/params come from wherever
+        // pushed this Signup screen, so they can't be statically typed here.
+        (navigation as { replace: (name: string, params?: object) => void }).replace(redirectTo, redirectParams);
+      } else if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.replace('MainTabs');
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -42,6 +58,8 @@ export default function SignupScreen({ navigation }: AuthStackScreenProps<'Signu
         <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>{t('auth.signup.subtitle')}</Text>
       </View>
 
+      <Input label={t('auth.signup.fullName')} value={fullName} onChangeText={setFullName} autoCapitalize="words" />
+      <Input label={t('auth.signup.phone')} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
       <Input label={t('auth.signup.email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
       <Input label={t('auth.signup.password')} value={password} onChangeText={setPassword} secureTextEntry />
       <Input
@@ -57,7 +75,7 @@ export default function SignupScreen({ navigation }: AuthStackScreenProps<'Signu
 
       <View style={styles.footer}>
         <Text style={{ color: theme.colors.textMuted }}>{t('auth.signup.haveAccount')} </Text>
-        <Text style={[styles.link, { color: theme.colors.primary }]} onPress={() => navigation.navigate('Login')}>
+        <Text style={[styles.link, { color: theme.colors.primary }]} onPress={() => navigation.replace('Login', route.params)}>
           {t('auth.signup.loginLink')}
         </Text>
       </View>

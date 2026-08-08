@@ -2,7 +2,7 @@ import React from 'react';
 import { FlatList, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../hooks';
+import { useAuth, useTheme } from '../../hooks';
 import { Button, Card, Screen } from '../../components/ui';
 import { spacing, radius, typography } from '../../theme/theme';
 import { decors, heroImage, strengthKeys, type Decor } from '../../content/home';
@@ -11,6 +11,7 @@ import type { MainTabScreenProps } from '../../navigation/types';
 export default function HomeScreen({ navigation }: MainTabScreenProps<'HomeTab'>) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { isAuthenticated } = useAuth();
 
   const goToCatalog = () => navigation.navigate('CatalogTab');
 
@@ -31,6 +32,24 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<'HomeTab'>
         <Text style={styles.heroTitle}>{t('home.hero.title')}</Text>
         <Button title={t('home.hero.cta')} onPress={goToCatalog} style={styles.heroButton} />
       </ImageBackground>
+
+      {!isAuthenticated ? (
+        <View style={styles.section}>
+          <Card style={styles.guestCard}>
+            <Text style={[styles.guestTitle, { color: theme.colors.text }]}>{t('auth.required.title')}</Text>
+            <Text style={[styles.guestMessage, { color: theme.colors.textMuted }]}>{t('auth.required.message')}</Text>
+            <View style={styles.guestActions}>
+              <Button title={t('auth.login.submit')} onPress={() => navigation.navigate('Login')} style={styles.guestButton} />
+              <Button
+                title={t('auth.signup.title')}
+                variant="outline"
+                onPress={() => navigation.navigate('Signup')}
+                style={styles.guestButton}
+              />
+            </View>
+          </Card>
+        </View>
+      ) : null}
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('home.strengths.title')}</Text>
@@ -65,6 +84,12 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<'HomeTab'>
 }
 
 const styles = StyleSheet.create({
+  guestCard: { gap: spacing.sm },
+  guestTitle: { ...typography.h3 },
+  guestMessage: { ...typography.body },
+  guestActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
+  guestButton: { flex: 1 },
+
   hero: {
     height: 320,
     justifyContent: 'flex-end',

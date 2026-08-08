@@ -2,13 +2,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
 
-export type AuthStackParamList = {
-  Login: undefined;
-  Signup: undefined;
-  ForgotPassword: undefined;
-  ResetPassword: { token?: string } | undefined;
-};
-
 export type MainTabParamList = {
   HomeTab: undefined;
   CatalogTab: undefined;
@@ -18,8 +11,17 @@ export type MainTabParamList = {
   ProfileTab: undefined;
 };
 
+// A screen that requires sign-in (e.g. Checkout) pushes 'Login' on top of itself with
+// `redirectTo` set to its own route name; LoginScreen/SignupScreen replace themselves
+// with that route on success, or just go back if no redirect was requested.
+export type AuthRedirect = { redirectTo?: keyof RootStackParamList; redirectParams?: object };
+
 export type RootStackParamList = {
   MainTabs: undefined;
+  Login: AuthRedirect | undefined;
+  Signup: AuthRedirect | undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { token?: string } | undefined;
   ProductDetail: { productId: string };
   Checkout: undefined;
   OrderDetail: { orderId: string };
@@ -42,5 +44,3 @@ export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScre
   BottomTabScreenProps<MainTabParamList, T>,
   NativeStackScreenProps<RootStackParamList>
 >;
-
-export type AuthStackScreenProps<T extends keyof AuthStackParamList> = NativeStackScreenProps<AuthStackParamList, T>;

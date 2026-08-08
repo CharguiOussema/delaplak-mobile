@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { useApp, useAccess, useTheme } from '../../hooks';
+import { useQuery } from 'react-query';
+import { useApp, useAccess, useCart, useTheme } from '../../hooks';
 import { Badge, Button, ErrorState, LoadingState, Screen } from '../../components/ui';
 import { RoomPreviewModal } from '../../components/product-preview/RoomPreviewModal';
 import { productService } from '../../services/ProductService';
-import { cartService } from '../../services/CartService';
 import { queryKeys } from '../../services/QueryClientManager';
 import { pickI18nText, formatCurrency } from '../../utils/format';
 import { getErrorMessage } from '../../utils/errorHandling';
@@ -40,8 +39,8 @@ export default function ProductDetailScreen({ route }: RootStackScreenProps<'Pro
   const { t } = useTranslation();
   const theme = useTheme();
   const { language } = useApp();
-  const { canUseCart } = useAccess();
-  const queryClient = useQueryClient();
+  const { canUseCart, isClient } = useAccess();
+  const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [addedFeedback, setAddedFeedback] = useState(false);
   const [selections, setSelections] = useState<Record<string, string>>({});
@@ -77,21 +76,22 @@ export default function ProductDetailScreen({ route }: RootStackScreenProps<'Pro
     }, productQuery.data.price);
   }, [productQuery.data, attributeGroups, selections]);
 
-  const addToCartMutation = useMutation(
-    (qty: number) =>
-      cartService.addItem(
-        productId,
-        qty,
-        attributeGroups.map((group) => ({ attribute: group.attribute._id, option: selections[group.attribute._id] })),
-      ),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(queryKeys.CART);
-        setAddedFeedback(true);
-        setTimeout(() => setAddedFeedback(false), 2000);
+  const handleAddToCart = () => {
+    if (!productQuery.data) return;
+    addItem.mutate(
+      {
+        product: productQuery.data,
+        quantity,
+        selectedOptions: attributeGroups.map((group) => ({ attribute: group.attribute._id, option: selections[group.attribute._id] })),
       },
-    },
-  );
+      {
+        onSuccess: () => {
+          setAddedFeedback(true);
+          setTimeout(() => setAddedFeedback(false), 2000);
+        },
+      },
+    );
+  };
 
   if (productQuery.isLoading) return <LoadingState />;
   if (productQuery.isError || !productQuery.data) {
@@ -127,7 +127,7 @@ export default function ProductDetailScreen({ route }: RootStackScreenProps<'Pro
         <Text style={[styles.price, { color: theme.colors.primary }]}>{formatCurrency(unitPrice, product.currency)}</Text>
         <Badge label={outOfStock ? t('catalog.outOfStock') : t('catalog.inStock')} tone={outOfStock ? 'danger' : 'success'} />
 
-        {canUseCart && images.length > 0 ? (
+        {isClient && images.length > 0 ? (
           <Button
             title={t('product.preview.cta')}
             variant="outline"
@@ -209,13 +209,13 @@ export default function ProductDetailScreen({ route }: RootStackScreenProps<'Pro
             </View>
             <Button
               title={addedFeedback ? t('product.detail.addedToCart') : t('product.detail.addToCart')}
-              onPress={() => addToCartMutation.mutate(quantity)}
-              loading={addToCartMutation.isLoading}
+              onPress={handleAddToCart}
+              loading={addItem.isLoading}
               disabled={outOfStock || !allSelected}
               fullWidth
             />
-            {addToCartMutation.isError ? (
-              <Text style={[styles.error, { color: theme.colors.danger }]}>{getErrorMessage(addToCartMutation.error)}</Text>
+            {addItem.isError ? (
+              <Text style={[styles.error, { color: theme.colors.danger }]}>{getErrorMessage(addItem.error)}</Text>
             ) : null}
           </View>
         ) : null}

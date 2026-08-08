@@ -4,6 +4,7 @@ import { authService } from '../services/AuthService';
 import { apiService } from '../services/api';
 import { tokenStorage } from '../services/tokenStorage';
 import { queryKeys } from '../services/QueryClientManager';
+import { mergeGuestCartIntoServer } from '../hooks/useCart';
 import { User } from '../models';
 
 interface AuthContextType {
@@ -12,7 +13,7 @@ interface AuthContextType {
   isUserLoading: boolean;
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, fullName: string, phone: string) => Promise<void>;
   logout: () => Promise<void>;
   refetchUser: () => void;
 }
@@ -60,13 +61,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     await authService.login(email, password);
     setIsAuthenticated(true);
+    await mergeGuestCartIntoServer();
     await queryClient.invalidateQueries(queryKeys.CURRENT_USER);
+    await queryClient.invalidateQueries(queryKeys.CART);
   };
 
-  const signup = async (email: string, password: string) => {
-    await authService.signup(email, password);
+  const signup = async (email: string, password: string, fullName: string, phone: string) => {
+    await authService.signup(email, password, fullName, phone);
     setIsAuthenticated(true);
+    await mergeGuestCartIntoServer();
     await queryClient.invalidateQueries(queryKeys.CURRENT_USER);
+    await queryClient.invalidateQueries(queryKeys.CART);
   };
 
   const logout = async () => {

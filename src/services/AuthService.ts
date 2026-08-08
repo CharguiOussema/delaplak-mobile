@@ -3,8 +3,12 @@ import { tokenStorage } from './tokenStorage';
 import { AuthResponse, User } from '../models';
 
 class AuthService {
-  async signup(email: string, password: string): Promise<AuthResponse> {
-    const res = await apiService.post<AuthResponse>('/api/auth/signup', { email, password }, { skipAuth: true });
+  async signup(email: string, password: string, fullName: string, phone: string): Promise<AuthResponse> {
+    const res = await apiService.post<AuthResponse>(
+      '/api/auth/signup',
+      { email, password, fullName, phone },
+      { skipAuth: true },
+    );
     await tokenStorage.setTokens(res.accessToken, res.refreshToken);
     return res;
   }
@@ -17,6 +21,10 @@ class AuthService {
 
   async me(): Promise<User> {
     return apiService.get<User>('/api/auth/me');
+  }
+
+  async updateProfile(payload: { fullName?: string; phone?: string; email?: string }): Promise<User> {
+    return apiService.patch<User>('/api/auth/me', payload);
   }
 
   async logout(): Promise<void> {

@@ -20,6 +20,8 @@ export default function AdminUserFormScreen({ route, navigation }: RootStackScre
 
   const userQuery = useQuery([queryKeys.USER, userId], () => userService.getById(userId as string), { enabled: isEdit });
 
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<USER_ROLES | null>(null);
@@ -28,6 +30,8 @@ export default function AdminUserFormScreen({ route, navigation }: RootStackScre
 
   useEffect(() => {
     if (userQuery.data) {
+      setFullName(userQuery.data.fullName);
+      setPhone(userQuery.data.phone);
       setEmail(userQuery.data.email);
       setRole(userQuery.data.role);
       setIsActive(userQuery.data.isActive);
@@ -40,9 +44,9 @@ export default function AdminUserFormScreen({ route, navigation }: RootStackScre
   const saveMutation = useMutation(
     async () => {
       if (isEdit) {
-        return userService.update(userId as string, { email, role: role as USER_ROLES, isActive });
+        return userService.update(userId as string, { email, fullName, phone, role: role as USER_ROLES, isActive });
       }
-      return userService.create({ email, password, role: role as USER_ROLES });
+      return userService.create({ email, password, fullName, phone, role: role as USER_ROLES });
     },
     {
       onSuccess: () => {
@@ -64,7 +68,7 @@ export default function AdminUserFormScreen({ route, navigation }: RootStackScre
 
   const handleSave = () => {
     setError(null);
-    if (!email.trim()) {
+    if (!fullName.trim() || !phone.trim() || !email.trim()) {
       setError(t('common.required'));
       return;
     }
@@ -89,6 +93,8 @@ export default function AdminUserFormScreen({ route, navigation }: RootStackScre
     <Screen scroll>
       <Text style={[styles.title, { color: theme.colors.text }]}>{isEdit ? t('admin.users.edit') : t('admin.users.add')}</Text>
 
+      <Input label={t('admin.users.fullName')} value={fullName} onChangeText={setFullName} autoCapitalize="words" />
+      <Input label={t('admin.users.phone')} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
       <Input label={t('admin.users.email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
       {!isEdit ? <Input label={t('admin.users.password')} value={password} onChangeText={setPassword} secureTextEntry /> : null}
 

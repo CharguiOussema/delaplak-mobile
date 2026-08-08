@@ -5,11 +5,15 @@ import { PaginationResponse, User } from '../models';
 export type CreateUserPayload = {
   email: string;
   password: string;
+  fullName: string;
+  phone: string;
   role: string;
 };
 
 export type UpdateUserPayload = Partial<{
   email: string;
+  fullName: string;
+  phone: string;
   role: string;
   isActive: boolean;
   preferredLanguage: string;

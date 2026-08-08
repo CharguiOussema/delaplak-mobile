@@ -6,9 +6,9 @@ import { Button, Input, Screen } from '../../components/ui';
 import { authService } from '../../services/AuthService';
 import { getErrorMessage } from '../../utils/errorHandling';
 import { spacing, typography } from '../../theme/theme';
-import type { AuthStackScreenProps } from '../../navigation/types';
+import type { RootStackScreenProps } from '../../navigation/types';
 
-export default function ForgotPasswordScreen({ navigation }: AuthStackScreenProps<'ForgotPassword'>) {
+export default function ForgotPasswordScreen({ navigation }: RootStackScreenProps<'ForgotPassword'>) {
   const { t } = useTranslation();
   const theme = useTheme();
   const [email, setEmail] = useState('');
@@ -52,7 +52,7 @@ export default function ForgotPasswordScreen({ navigation }: AuthStackScreenProp
         </>
       )}
 
-      <Text style={[styles.link, { color: theme.colors.primary }]} onPress={() => navigation.navigate('Login')}>
+      <Text style={[styles.link, { color: theme.colors.primary }]} onPress={() => navigation.replace('Login')}>
         {t('auth.forgotPassword.backToLogin')}
       </Text>
     </Screen>

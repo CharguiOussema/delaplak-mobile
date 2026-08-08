@@ -2,12 +2,9 @@ import React from 'react';
 import { Alert, FlatList, Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { useApp, useTheme } from '../../hooks';
+import { useApp, useAuth, useCart, useTheme } from '../../hooks';
 import { Button, EmptyState, ErrorState, LoadingState } from '../../components/ui';
-import { cartService } from '../../services/CartService';
 import { productService } from '../../services/ProductService';
-import { queryKeys } from '../../services/QueryClientManager';
 import { pickI18nText, formatCurrency, describeSelectedOptions } from '../../utils/format';
 import { getErrorMessage } from '../../utils/errorHandling';
 import { spacing, radius, typography } from '../../theme/theme';
@@ -18,32 +15,30 @@ export default function CartScreen({ navigation }: MainTabScreenProps<'CartTab'>
   const { t } = useTranslation();
   const theme = useTheme();
   const { language } = useApp();
-  const queryClient = useQueryClient();
-
-  const cartQuery = useQuery([queryKeys.CART], () => cartService.getCart());
-
-  const invalidate = () => queryClient.invalidateQueries(queryKeys.CART);
-
-  const setQuantityMutation = useMutation(
-    ({ itemId, quantity }: { itemId: string; quantity: number }) => cartService.setItemQuantity(itemId, quantity),
-    { onSuccess: invalidate },
-  );
-  const removeMutation = useMutation((itemId: string) => cartService.removeItem(itemId), { onSuccess: invalidate });
-  const clearMutation = useMutation(() => cartService.clear(), { onSuccess: invalidate });
+  const { isAuthenticated } = useAuth();
+  const { cart, isLoading, isError, error, refetch, setItemQuantity, removeItem, clear } = useCart();
 
   const handleClear = () => {
     Alert.alert(t('cart.clear'), t('cart.clearConfirm'), [
       { text: t('common.cancel'), style: 'cancel' },
-      { text: t('common.confirm'), style: 'destructive', onPress: () => clearMutation.mutate() },
+      { text: t('common.confirm'), style: 'destructive', onPress: () => clear.mutate() },
     ]);
   };
 
-  if (cartQuery.isLoading) return <LoadingState />;
-  if (cartQuery.isError) {
-    return <ErrorState message={getErrorMessage(cartQuery.error)} onRetry={() => cartQuery.refetch()} />;
+  const handleCheckout = () => {
+    if (isAuthenticated) {
+      navigation.navigate('Checkout');
+    } else {
+      navigation.navigate('Login', { redirectTo: 'Checkout' });
+    }
+  };
+
+  if (isLoading) return <LoadingState />;
+  if (isError) {
+    return <ErrorState message={getErrorMessage(error)} onRetry={() => refetch()} />;
   }
 
-  const items = cartQuery.data?.items ?? [];
+  const items = cart?.items ?? [];
   const populatedItems = items.filter((item): item is CartItem & { product: Product } => typeof item.product === 'object');
   const total = populatedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const currency = populatedItems[0]?.product.currency ?? 'MAD';
@@ -97,16 +92,16 @@ export default function CartScreen({ navigation }: MainTabScreenProps<'CartTab'>
                         title="-"
                         variant="outline"
                         size="sm"
-                        onPress={() => setQuantityMutation.mutate({ itemId: item._id, quantity: Math.max(1, item.quantity - 1) })}
+                        onPress={() => setItemQuantity.mutate({ itemId: item._id, quantity: Math.max(1, item.quantity - 1) })}
                       />
                       <Text style={[styles.quantityValue, { color: theme.colors.text }]}>{item.quantity}</Text>
                       <Button
                         title="+"
                         variant="outline"
                         size="sm"
-                        onPress={() => setQuantityMutation.mutate({ itemId: item._id, quantity: item.quantity + 1 })}
+                        onPress={() => setItemQuantity.mutate({ itemId: item._id, quantity: item.quantity + 1 })}
                       />
-                      <Text style={[styles.remove, { color: theme.colors.danger }]} onPress={() => removeMutation.mutate(item._id)}>
+                      <Text style={[styles.remove, { color: theme.colors.danger }]} onPress={() => removeItem.mutate(item._id)}>
                         {t('cart.remove')}
                       </Text>
                     </View>
@@ -120,7 +115,7 @@ export default function CartScreen({ navigation }: MainTabScreenProps<'CartTab'>
               <Text style={[styles.totalLabel, { color: theme.colors.text }]}>{t('cart.total')}</Text>
               <Text style={[styles.totalValue, { color: theme.colors.text }]}>{formatCurrency(total, currency)}</Text>
             </View>
-            <Button title={t('cart.checkout')} onPress={() => navigation.navigate('Checkout')} fullWidth />
+            <Button title={t('cart.checkout')} onPress={handleCheckout} fullWidth />
           </View>
         </>
       )}

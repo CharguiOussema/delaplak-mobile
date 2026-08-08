@@ -6,9 +6,9 @@ import { Button, Input, Screen } from '../../components/ui';
 import { authService } from '../../services/AuthService';
 import { getErrorMessage } from '../../utils/errorHandling';
 import { spacing, typography } from '../../theme/theme';
-import type { AuthStackScreenProps } from '../../navigation/types';
+import type { RootStackScreenProps } from '../../navigation/types';
 
-export default function ResetPasswordScreen({ navigation, route }: AuthStackScreenProps<'ResetPassword'>) {
+export default function ResetPasswordScreen({ navigation, route }: RootStackScreenProps<'ResetPassword'>) {
   const { t } = useTranslation();
   const theme = useTheme();
   const [token, setToken] = useState(route.params?.token ?? '');
@@ -40,7 +40,7 @@ export default function ResetPasswordScreen({ navigation, route }: AuthStackScre
       {success ? (
         <>
           <Text style={[styles.success, { color: theme.colors.success }]}>{t('auth.resetPassword.success')}</Text>
-          <Button title={t('auth.forgotPassword.backToLogin')} onPress={() => navigation.navigate('Login')} fullWidth />
+          <Button title={t('auth.forgotPassword.backToLogin')} onPress={() => navigation.replace('Login')} fullWidth />
         </>
       ) : (
         <>

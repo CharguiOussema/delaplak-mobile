@@ -6,9 +6,9 @@ import { useAuth, useTheme } from '../../hooks';
 import { Button, Input, Screen } from '../../components/ui';
 import { getErrorMessage } from '../../utils/errorHandling';
 import { spacing, typography } from '../../theme/theme';
-import type { AuthStackScreenProps } from '../../navigation/types';
+import type { RootStackScreenProps } from '../../navigation/types';
 
-export default function LoginScreen({ navigation }: AuthStackScreenProps<'Login'>) {
+export default function LoginScreen({ navigation, route }: RootStackScreenProps<'Login'>) {
   const { t } = useTranslation();
   const theme = useTheme();
   const { login } = useAuth();
@@ -22,6 +22,16 @@ export default function LoginScreen({ navigation }: AuthStackScreenProps<'Login'
     setLoading(true);
     try {
       await login(email.trim(), password);
+      const { redirectTo, redirectParams } = route.params ?? {};
+      if (redirectTo) {
+        // Dynamic redirect target: the destination route name/params come from wherever
+        // pushed this Login screen, so they can't be statically typed here.
+        (navigation as { replace: (name: string, params?: object) => void }).replace(redirectTo, redirectParams);
+      } else if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.replace('MainTabs');
+      }
     } catch (err) {
       setError(getErrorMessage(err, t('auth.login.error')));
     } finally {
@@ -66,7 +76,7 @@ export default function LoginScreen({ navigation }: AuthStackScreenProps<'Login'
 
       <View style={styles.footer}>
         <Text style={{ color: theme.colors.textMuted }}>{t('auth.login.noAccount')} </Text>
-        <Text style={[styles.link, { color: theme.colors.primary }]} onPress={() => navigation.navigate('Signup')}>
+        <Text style={[styles.link, { color: theme.colors.primary }]} onPress={() => navigation.replace('Signup', route.params)}>
           {t('auth.login.signupLink')}
         </Text>
       </View>

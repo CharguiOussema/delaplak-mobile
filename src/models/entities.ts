@@ -9,6 +9,8 @@ export type I18nText = {
 export type User = {
   _id: string;
   email: string;
+  fullName: string;
+  phone: string;
   role: USER_ROLES;
   isActive: boolean;
   preferredLanguage: LANGUAGES;

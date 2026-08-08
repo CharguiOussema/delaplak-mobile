@@ -28,4 +28,5 @@ export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'delaplak.accessToken',
   REFRESH_TOKEN: 'delaplak.refreshToken',
   LANGUAGE: 'delaplak.language',
+  GUEST_CART: 'delaplak.guestCart',
 } as const;

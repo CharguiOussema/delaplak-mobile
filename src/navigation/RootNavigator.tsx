@@ -1,21 +1,21 @@
 import React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
-import { useAuth, useApp, useTheme } from '../hooks';
+import { useApp, useTheme } from '../hooks';
 import { LoadingState } from '../components/ui';
-import AuthNavigator from './AuthNavigator';
 import AppStackNavigator from './AppStackNavigator';
 import { RestartPromptModal } from '../components/RestartPromptModal';
 
 /**
- * Auth gate at the navigator root, mirroring the web app's ProtectedRoute: unauthenticated
- * users only ever see the Auth stack, authenticated users only ever see the main app stack.
+ * Home, Catalog, ProductDetail and Cart are public (mirrors the web app) — there is no
+ * auth gate at the navigator root anymore. Screens that require sign-in are guarded
+ * individually in AppStackNavigator via withAuthGuard, which pushes the Login screen
+ * as a modal instead of swapping the whole app to an "Auth stack".
  */
 export default function RootNavigator() {
-  const { isAuthenticated, isBootstrapping } = useAuth();
   const { isLoading: isAppLoading } = useApp();
   const theme = useTheme();
 
-  if (isBootstrapping || isAppLoading) {
+  if (isAppLoading) {
     return <LoadingState />;
   }
 
@@ -33,7 +33,7 @@ export default function RootNavigator() {
         },
       }}
     >
-      {isAuthenticated ? <AppStackNavigator /> : <AuthNavigator />}
+      <AppStackNavigator />
       <RestartPromptModal />
     </NavigationContainer>
   );

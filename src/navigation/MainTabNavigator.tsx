@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 import { useAccess, useTheme } from '../hooks';
+import { withAuthGuard } from './withAuthGuard';
 import { radius } from '../theme/theme';
 import HomeScreen from '../screens/home/HomeScreen';
 import CatalogScreen from '../screens/catalog/CatalogScreen';
@@ -13,6 +14,9 @@ import ProfileScreen from '../screens/profile/ProfileScreen';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+// Orders and Profile require an identity; guests tapping either tab get a sign-in prompt.
+const GuardedOrdersScreen = withAuthGuard(OrdersScreen);
+const GuardedProfileScreen = withAuthGuard(ProfileScreen);
 
 const TAB_ICONS: Record<keyof MainTabParamList, string> = {
   HomeTab: '🏠',
@@ -51,9 +55,9 @@ export default function MainTabNavigator() {
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ tabBarLabel: t('nav.home') }} />
       <Tab.Screen name="CatalogTab" component={CatalogScreen} options={{ tabBarLabel: t('nav.catalog') }} />
       {canUseCart ? <Tab.Screen name="CartTab" component={CartScreen} options={{ tabBarLabel: t('nav.cart') }} /> : null}
-      <Tab.Screen name="OrdersTab" component={OrdersScreen} options={{ tabBarLabel: t('nav.orders') }} />
+      <Tab.Screen name="OrdersTab" component={GuardedOrdersScreen} options={{ tabBarLabel: t('nav.orders') }} />
       {canAccessAdminTab ? <Tab.Screen name="AdminTab" component={AdminHomeScreen} options={{ tabBarLabel: t('nav.admin') }} /> : null}
-      <Tab.Screen name="ProfileTab" component={ProfileScreen} options={{ tabBarLabel: t('nav.profile') }} />
+      <Tab.Screen name="ProfileTab" component={GuardedProfileScreen} options={{ tabBarLabel: t('nav.profile') }} />
     </Tab.Navigator>
   );
 }

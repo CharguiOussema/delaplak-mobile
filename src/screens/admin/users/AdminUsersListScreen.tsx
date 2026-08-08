@@ -28,7 +28,9 @@ export default function AdminUsersListScreen({ navigation }: RootStackScreenProp
       onPress={() => navigation.navigate('AdminUserForm', { userId: item._id })}
     >
       <View style={styles.rowBody}>
-        <Text style={[styles.email, { color: theme.colors.text }]}>{item.email}</Text>
+        <Text style={[styles.email, { color: theme.colors.text }]}>{item.fullName}</Text>
+        <Text style={[styles.subtext, { color: theme.colors.textMuted }]}>{item.email}</Text>
+        <Text style={[styles.subtext, { color: theme.colors.textMuted }]}>{item.phone}</Text>
         <View style={styles.badgeRow}>
           <Badge label={item.role} tone="primary" />
           <Badge label={item.isActive ? t('common.active') : t('common.inactive')} tone={item.isActive ? 'success' : 'danger'} />
@@ -61,5 +63,6 @@ const styles = StyleSheet.create({
   row: { borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, padding: spacing.md, marginBottom: spacing.md },
   rowBody: { gap: spacing.xs },
   email: { ...typography.bodyBold },
+  subtext: { ...typography.small },
   badgeRow: { flexDirection: 'row', gap: spacing.xs },
 });
