@@ -145,6 +145,56 @@ export type Invoice = {
   updatedAt: string;
 };
 
+export type HeroSection = {
+  eyebrow: I18nText;
+  titleLine1: I18nText;
+  titleAccent: I18nText;
+  intro: I18nText;
+  ctaPrimaryLabel: I18nText;
+  ctaSecondaryLabel: I18nText;
+  mainImage: string;
+  accentImage: string;
+};
+
+export type StrengthItem = {
+  _id: string;
+  text: I18nText;
+};
+
+export type StrengthsSection = {
+  eyebrow: I18nText;
+  title: I18nText;
+};
+
+export type DecorItem = {
+  _id: string;
+  title: I18nText;
+  image: string;
+};
+
+export type DecorsSection = {
+  eyebrow: I18nText;
+  title: I18nText;
+  discoverLabel: I18nText;
+};
+
+export type CtaSection = {
+  title: I18nText;
+  actionLabel: I18nText;
+};
+
+export type SiteSettings = {
+  _id: string;
+  hero: HeroSection;
+  strengthsSection: StrengthsSection;
+  strengths: StrengthItem[];
+  decorsSection: DecorsSection;
+  decors: DecorItem[];
+  cta: CtaSection;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type AuthResponse = {
   user: User;
   accessToken: string;

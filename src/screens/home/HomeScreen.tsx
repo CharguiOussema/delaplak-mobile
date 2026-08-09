@@ -2,35 +2,56 @@ import React from 'react';
 import { FlatList, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { useAuth, useTheme } from '../../hooks';
-import { Button, Card, Screen } from '../../components/ui';
+import { useQuery } from 'react-query';
+import { useApp, useAuth, useTheme } from '../../hooks';
+import { Button, Card, LoadingState, Screen } from '../../components/ui';
 import { spacing, radius, typography } from '../../theme/theme';
-import { decors, heroImage, strengthKeys, type Decor } from '../../content/home';
+import { siteSettingsService } from '../../services/SiteSettingsService';
+import { queryKeys } from '../../services/QueryClientManager';
+import { pickI18nText } from '../../utils/format';
+import { heroImageFallback } from '../../content/home';
+import type { DecorItem } from '../../models';
 import type { MainTabScreenProps } from '../../navigation/types';
 
 export default function HomeScreen({ navigation }: MainTabScreenProps<'HomeTab'>) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { language } = useApp();
   const { isAuthenticated } = useAuth();
+
+  const settingsQuery = useQuery([queryKeys.SITE_SETTINGS], () => siteSettingsService.get());
 
   const goToCatalog = () => navigation.navigate('CatalogTab');
 
-  const renderDecor = ({ item }: { item: Decor }) => (
+  if (settingsQuery.isLoading || !settingsQuery.data) {
+    return <LoadingState />;
+  }
+
+  const settings = settingsQuery.data;
+  const heroSource = settings.hero.mainImage ? { uri: siteSettingsService.resolveImageUrl(settings.hero.mainImage) } : heroImageFallback;
+
+  const renderDecor = ({ item }: { item: DecorItem }) => (
     <Pressable onPress={goToCatalog} style={styles.decorCard}>
-      <Image source={item.image} style={styles.decorImage} contentFit="cover" />
+      {item.image ? (
+        <Image source={{ uri: siteSettingsService.resolveImageUrl(item.image) }} style={styles.decorImage} contentFit="cover" />
+      ) : (
+        <View style={[styles.decorImage, { backgroundColor: theme.colors.surfaceAlt }]} />
+      )}
       <View style={styles.decorOverlay} />
-      <Text style={styles.decorTitle}>{t(item.titleKey)}</Text>
+      <Text style={styles.decorTitle}>{pickI18nText(item.title, language)}</Text>
     </Pressable>
   );
 
   return (
     <Screen scroll padded={false}>
-      <ImageBackground source={heroImage} style={styles.hero} imageStyle={styles.heroImage}>
+      <ImageBackground source={heroSource} style={styles.hero} imageStyle={styles.heroImage}>
         <View style={styles.heroOverlay} />
         <Image source={require('../../../assets/logo-mark.png')} style={styles.heroLogo} contentFit="contain" />
-        <Text style={styles.heroEyebrow}>{t('home.hero.eyebrow')}</Text>
-        <Text style={styles.heroTitle}>{t('home.hero.title')}</Text>
-        <Button title={t('home.hero.cta')} onPress={goToCatalog} style={styles.heroButton} />
+        <Text style={styles.heroEyebrow}>{pickI18nText(settings.hero.eyebrow, language)}</Text>
+        <Text style={styles.heroTitle}>
+          {pickI18nText(settings.hero.titleLine1, language)} {pickI18nText(settings.hero.titleAccent, language)}
+        </Text>
+        <Button title={pickI18nText(settings.hero.ctaPrimaryLabel, language)} onPress={goToCatalog} style={styles.heroButton} />
       </ImageBackground>
 
       {!isAuthenticated ? (
@@ -52,32 +73,32 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<'HomeTab'>
       ) : null}
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('home.strengths.title')}</Text>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{pickI18nText(settings.strengthsSection.title, language)}</Text>
         <View style={styles.strengthList}>
-          {strengthKeys.map((key) => (
-            <Card key={key} style={styles.strengthCard}>
+          {settings.strengths.map((item) => (
+            <Card key={item._id} style={styles.strengthCard}>
               <View style={[styles.dot, { backgroundColor: theme.colors.primary }]} />
-              <Text style={[styles.strengthText, { color: theme.colors.text }]}>{t(key)}</Text>
+              <Text style={[styles.strengthText, { color: theme.colors.text }]}>{pickI18nText(item.text, language)}</Text>
             </Card>
           ))}
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('home.decors.title')}</Text>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{pickI18nText(settings.decorsSection.title, language)}</Text>
         <FlatList
-          data={decors}
+          data={settings.decors}
           horizontal
           showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.slug}
+          keyExtractor={(item) => item._id}
           renderItem={renderDecor}
           contentContainerStyle={styles.decorList}
         />
       </View>
 
       <View style={[styles.cta, { backgroundColor: theme.colors.primary }]}>
-        <Text style={styles.ctaTitle}>{t('home.cta.title')}</Text>
-        <Button title={t('home.cta.action')} onPress={goToCatalog} variant="secondary" style={styles.ctaButton} />
+        <Text style={styles.ctaTitle}>{pickI18nText(settings.cta.title, language)}</Text>
+        <Button title={pickI18nText(settings.cta.actionLabel, language)} onPress={goToCatalog} variant="secondary" style={styles.ctaButton} />
       </View>
     </Screen>
   );

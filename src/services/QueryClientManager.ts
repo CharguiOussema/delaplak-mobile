@@ -17,6 +17,7 @@ export const queryKeys = {
   INVOICE: 'invoice',
   USERS: 'users',
   USER: 'user',
+  SITE_SETTINGS: 'siteSettings',
 } as const;
 
 class QueryClientManager {

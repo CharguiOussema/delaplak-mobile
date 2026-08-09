@@ -33,12 +33,12 @@ export default function AdminHomeScreen({ navigation }: MainTabScreenProps<'Admi
       icon: '🧱',
       onPress: () => navigation.navigate('AdminProductsList'),
     },
-    {
-      key: 'productAttributes',
-      title: t('admin.productAttributes'),
-      subtitle: t('admin.productAttributesSubtitle'),
-      icon: '⚙️',
-      onPress: () => navigation.navigate('AdminProductAttributesList'),
+    canManageUsers && {
+      key: 'settings',
+      title: t('admin.settings.title'),
+      subtitle: t('admin.settings.subtitle'),
+      icon: '🛠️',
+      onPress: () => navigation.navigate('AdminSettings'),
     },
   ].filter(Boolean) as { key: string; title: string; subtitle: string; icon: string; onPress: () => void }[];
 
