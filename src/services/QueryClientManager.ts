@@ -18,6 +18,7 @@ export const queryKeys = {
   USERS: 'users',
   USER: 'user',
   SITE_SETTINGS: 'siteSettings',
+  DASHBOARD_STATS: 'dashboardStats',
 } as const;
 
 class QueryClientManager {

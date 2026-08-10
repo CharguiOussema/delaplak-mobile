@@ -9,9 +9,16 @@ import type { MainTabScreenProps } from '../../navigation/types';
 export default function AdminHomeScreen({ navigation }: MainTabScreenProps<'AdminTab'>) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { canManageUsers } = useAccess();
+  const { canManageUsers, canAccessDashboard } = useAccess();
 
   const sections = [
+    canAccessDashboard && {
+      key: 'dashboard',
+      title: t('admin.dashboard.title'),
+      subtitle: t('admin.dashboard.subtitle'),
+      icon: '📊',
+      onPress: () => navigation.navigate('AdminDashboard'),
+    },
     canManageUsers && {
       key: 'users',
       title: t('admin.users'),

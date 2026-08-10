@@ -195,6 +195,40 @@ export type SiteSettings = {
   updatedAt: string;
 };
 
+export type ChartSlice = { label: string; value: number };
+export type OrderStatusCount = { status: ORDER_STATUS; count: number };
+export type UserRoleCount = { role: USER_ROLES; count: number };
+export type DailyCount = { date: string; count: number };
+
+export type DashboardStats = {
+  products: {
+    total: number;
+    totalStock: number;
+    lowStockCount: number;
+    byCategory: ChartSlice[];
+  };
+  categories: {
+    total: number;
+  };
+  orders: {
+    total: number;
+    byStatus: OrderStatusCount[];
+    totalRevenue: number;
+    currency: string;
+    trend: DailyCount[];
+  };
+  users: {
+    total: number;
+    byRole: UserRoleCount[];
+  };
+  invoices: {
+    total: number;
+    totalAmount: number;
+    currency: string;
+  };
+  lowStockProducts: { _id: string; name: I18nText; stock: number }[];
+};
+
 export type AuthResponse = {
   user: User;
   accessToken: string;

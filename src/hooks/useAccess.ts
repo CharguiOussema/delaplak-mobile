@@ -31,6 +31,7 @@ export const useAccess = () => {
     canWriteProducts: isAdmin,
     canWriteProductAttributes: isAdmin,
     canWriteSiteSettings: isAdmin,
+    canAccessDashboard: isAdmin,
     canConfirmOrders: isAdmin,
     // Guests and signed-in clients can add to cart; staff have no cart. Checkout still
     // requires a signed-in CLIENT (guests are prompted to sign in from the cart screen).

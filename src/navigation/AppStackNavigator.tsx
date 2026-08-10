@@ -24,6 +24,7 @@ import AdminProductAttributesListScreen from '../screens/admin/productAttributes
 import AdminProductAttributeFormScreen from '../screens/admin/productAttributes/AdminProductAttributeFormScreen';
 import AdminSettingsScreen from '../screens/admin/settings/AdminSettingsScreen';
 import AdminHomeContentScreen from '../screens/admin/settings/AdminHomeContentScreen';
+import AdminDashboardScreen from '../screens/admin/dashboard/AdminDashboardScreen';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -45,6 +46,7 @@ const GuardedAdminProductAttributesList = withAuthGuard(AdminProductAttributesLi
 const GuardedAdminProductAttributeForm = withAuthGuard(AdminProductAttributeFormScreen);
 const GuardedAdminSettings = withAuthGuard(AdminSettingsScreen);
 const GuardedAdminHomeContent = withAuthGuard(AdminHomeContentScreen);
+const GuardedAdminDashboard = withAuthGuard(AdminDashboardScreen);
 
 export default function AppStackNavigator() {
   const { t } = useTranslation();
@@ -108,6 +110,7 @@ export default function AppStackNavigator() {
 
       <Stack.Screen name="AdminSettings" component={GuardedAdminSettings} options={{ title: t('admin.settings.title') }} />
       <Stack.Screen name="AdminHomeContent" component={GuardedAdminHomeContent} options={{ title: t('admin.settings.homeContent') }} />
+      <Stack.Screen name="AdminDashboard" component={GuardedAdminDashboard} options={{ title: t('admin.dashboard.title') }} />
     </Stack.Navigator>
   );
 }

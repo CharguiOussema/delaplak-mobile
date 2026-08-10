@@ -10,3 +10,5 @@ export { productAttributeService } from './ProductAttributeService';
 export { cartService } from './CartService';
 export { orderService } from './OrderService';
 export { invoiceService } from './InvoiceService';
+export { siteSettingsService } from './SiteSettingsService';
+export { dashboardService } from './DashboardService';
